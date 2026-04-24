@@ -2,9 +2,11 @@
 
 import "./globals.css";
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { api } from '@/services/api';
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
 import { 
   LayoutDashboard, 
   Users, 
@@ -17,7 +19,8 @@ import {
   X,
   UserPlus,
   Layout as LayoutIcon,
-  MessageCircle
+  MessageCircle,
+  LogIn
 } from 'lucide-react';
 
 export default function ClientLayout({
@@ -26,6 +29,7 @@ export default function ClientLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   
   // Lista de rotas que pertencem ao PAINEL ADMINISTRATIVO
   const adminRoutes = [
@@ -137,10 +141,17 @@ export default function ClientLayout({
           </nav>
 
           <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <Link href="/integracoes" className="btn btn-primary" style={{ width: '100%', fontSize: '0.875rem', textDecoration: 'none' }}>
-              <PlusCircle size={18} />
-              <span className="nav-text">Gerar Captura</span>
-            </Link>
+            <button 
+              onClick={async () => {
+                await signOut(auth);
+                router.push('/login');
+              }}
+              className="nav-link" 
+              style={{ width: '100%', cursor: 'pointer', border: 'none', background: 'transparent' }}
+            >
+              <LogIn size={20} />
+              <span className="nav-text">Sair</span>
+            </button>
             <p style={{ fontSize: '0.75rem', opacity: 0.5, textAlign: 'center' }}>v1.0.0 Alpha</p>
           </div>
         </aside>
