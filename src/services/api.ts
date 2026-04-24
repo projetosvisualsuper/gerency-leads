@@ -1,4 +1,4 @@
-import { Lead, Campaign, FilaEnvio, Settings } from '@/types/crm';
+import { Lead, Campaign, FilaEnvio, Settings, LandingPageInstance, LandingPageSettings } from '@/types/crm';
 import { db } from '@/lib/firebase';
 import { 
   collection, 
@@ -227,7 +227,10 @@ export const api = {
       notificacoes: { ...initialSettings.notificacoes, ...(settings.notificacoes || {}) },
       landingPage: { ...initialSettings.landingPage, ...(settings.landingPage || {}) },
       empresa: { ...initialSettings.empresa, ...(settings.empresa || {}) },
-      whatsappWidget: { ...initialSettings.whatsappWidget, ...(settings.whatsappWidget || {}) }
+      whatsappWidget: { 
+        ...initialSettings.whatsappWidget, 
+        ...(settings.whatsappWidget || {}) 
+      } as any
     };
   },
 
