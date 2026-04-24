@@ -224,8 +224,9 @@ export default function WhatsappConfigPage() {
                                   </div>
                                </div>
                             </div>
-                         </div>
-                       ))}
+                          </div>
+                       </div>
+                     ))}
                        {settings.whatsappWidget.atendentes.length === 0 && (
                          <div style={{ textAlign: 'center', padding: '2rem', opacity: 0.4 }}>Nenhum atendente cadastrado.</div>
                        )}

@@ -685,10 +685,10 @@ export default function MultiCapturaEditor() {
                                        }}
                                     />
                                  </div>
-                              </div>
-                           </div>
-                        </div>
-                      ))}
+                               </div>
+                            </div>
+                         </div>
+                       ))}
                    </div>
                 </div>
               </div>
