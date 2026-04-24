@@ -75,7 +75,14 @@ const TEMPLATE_DEFAULTS: Record<LandingPageTemplate, Partial<LandingPageSettings
     botaoColor: '#FFB948',
     formColor: '#4285F4',
     formTitulo: 'Solicite uma demonstração',
-    formSubtitulo: 'Preencha o formulário e um consultor entrará em contato.'
+    formSubtitulo: 'Preencha o formulário e um consultor entrará em contato.',
+    whatsapp: {
+      enabled: true,
+      posicao: 'right',
+      atendentes: [
+        { id: '1', nome: 'Suporte Visual Super', cargo: 'Atendimento Comercial', telefone: '554899999999', disponibilidade: 'Segunda a Sexta, 08h às 18h' }
+      ]
+    }
   },
   'lead-magnet': {
     titulo: 'MATERIAL GRATUITO',
@@ -88,7 +95,14 @@ const TEMPLATE_DEFAULTS: Record<LandingPageTemplate, Partial<LandingPageSettings
     botaoColor: '#2563eb',
     formColor: '#ffffff',
     formTitulo: 'Receber Material',
-    formSubtitulo: 'Informe seus dados para liberar o acesso ao PDF.'
+    formSubtitulo: 'Informe seus dados para liberar o acesso ao PDF.',
+    whatsapp: {
+      enabled: true,
+      posicao: 'right',
+      atendentes: [
+        { id: '1', nome: 'Suporte Visual Super', cargo: 'Atendimento Comercial', telefone: '554899999999', disponibilidade: 'Segunda a Sexta, 08h às 18h' }
+      ]
+    }
   },
   vsl: {
     titulo: 'TREINAMENTO ONLINE',
@@ -101,7 +115,14 @@ const TEMPLATE_DEFAULTS: Record<LandingPageTemplate, Partial<LandingPageSettings
     botaoColor: '#ef4444',
     formColor: '#1e293b',
     formTitulo: 'Garantir Acesso',
-    formSubtitulo: 'Cadastre-se para assistir ao conteúdo completo.'
+    formSubtitulo: 'Cadastre-se para assistir ao conteúdo completo.',
+    whatsapp: {
+      enabled: true,
+      posicao: 'right',
+      atendentes: [
+        { id: '1', nome: 'Suporte Visual Super', cargo: 'Atendimento Comercial', telefone: '554899999999', disponibilidade: 'Segunda a Sexta, 08h às 18h' }
+      ]
+    }
   },
   event: {
     titulo: 'CONVITE ESPECIAL',
@@ -114,7 +135,14 @@ const TEMPLATE_DEFAULTS: Record<LandingPageTemplate, Partial<LandingPageSettings
     botaoColor: '#e11d48',
     formColor: '#ffffff',
     formTitulo: 'Inscrição Gratuita',
-    formSubtitulo: 'Garanta sua vaga no workshop ao vivo.'
+    formSubtitulo: 'Garanta sua vaga no workshop ao vivo.',
+    whatsapp: {
+      enabled: true,
+      posicao: 'right',
+      atendentes: [
+        { id: '1', nome: 'Suporte Visual Super', cargo: 'Atendimento Comercial', telefone: '554899999999', disponibilidade: 'Segunda a Sexta, 08h às 18h' }
+      ]
+    }
   },
   minimalist: {
     titulo: 'CONTATO DIRETO',
@@ -127,7 +155,14 @@ const TEMPLATE_DEFAULTS: Record<LandingPageTemplate, Partial<LandingPageSettings
     botaoColor: '#3b82f6',
     formColor: '#1e293b',
     formTitulo: 'Solicitar Proposta',
-    formSubtitulo: 'Entraremos em contato o mais breve possível.'
+    formSubtitulo: 'Entraremos em contato o mais breve possível.',
+    whatsapp: {
+      enabled: true,
+      posicao: 'right',
+      atendentes: [
+        { id: '1', nome: 'Suporte Visual Super', cargo: 'Atendimento Comercial', telefone: '554899999999', disponibilidade: 'Segunda a Sexta, 08h às 18h' }
+      ]
+    }
   },
   coupon: {
     titulo: 'OFERTA IMPERDÍVEL',

@@ -9,16 +9,21 @@ import {
   ShieldCheck,
   Zap
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function IntegracoesPage() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedEmbed, setCopiedEmbed] = useState(false);
+  const [publicLink, setPublicLink] = useState('');
 
-  const publicLink = typeof window !== 'undefined' ? `${window.location.origin}/captura` : '';
+  useEffect(() => {
+    setPublicLink(`${window.location.origin}/captura`);
+  }, []);
+
   const embedCode = `<iframe src="${publicLink}" width="100%" height="700px" frameborder="0" style="border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></iframe>`;
 
   const copyToClipboard = (text: string, setter: (val: boolean) => void) => {
+    if (!text) return;
     navigator.clipboard.writeText(text);
     setter(true);
     setTimeout(() => setter(false), 2000);
