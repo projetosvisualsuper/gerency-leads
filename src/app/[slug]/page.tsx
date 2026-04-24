@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense, use } from 'react';
 import { api } from '@/services/api';
 import { Lead, LandingPageInstance } from '@/types/crm';
-import { CheckCircle2, ChevronRight, Check, Calendar } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Check, Calendar, MessageCircle, X, User } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
 const DEFAULT_BGS = {
@@ -173,6 +173,113 @@ function CaptureForm({ config, onSubmit }: { config: any, onSubmit: any }) {
   );
 }
 
+// --- WIDGET WHATSAPP ---
+function WhatsappWidget({ config, pageSlug }: { config: any, pageSlug: string }) {
+  const [open, setOpen] = useState(false);
+  const [selectedAttendant, setSelectedAttendant] = useState<any>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({ nome: '', email: '', telefone: '' });
+
+  if (!config?.enabled || !config?.atendentes?.length) return null;
+
+  const handleStartChat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const leadId = Math.random().toString(36).substr(2, 9);
+    await api.saveLead({
+      id: leadId,
+      nome: formData.nome,
+      email: formData.email,
+      telefone: formData.telefone,
+      origem: `WhatsApp (${pageSlug}) - Atendente: ${selectedAttendant.nome}`,
+      consentimentoLGPD: true,
+      status: 'novo',
+      tags: ['whatsapp'],
+      dataCriacao: new Date().toISOString()
+    } as Lead);
+
+    const msg = encodeURIComponent(`Olá ${selectedAttendant.nome}, vim pelo site e gostaria de falar com você.`);
+    window.open(`https://wa.me/${selectedAttendant.telefone.replace(/\D/g, '')}?text=${msg}`, '_blank');
+    
+    setOpen(false);
+    setShowForm(false);
+    setSelectedAttendant(null);
+    setFormData({ nome: '', email: '', telefone: '' });
+  };
+
+  return (
+    <div style={{ position: 'fixed', bottom: '2rem', [config.posicao || 'right']: '2rem', zIndex: 9999 }}>
+       <button 
+         onClick={() => setOpen(!open)}
+         style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#25D366', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.3)', border: 'none', cursor: 'pointer' }}
+       >
+         {open ? <X size={32} /> : <MessageCircle size={32} fill="currentColor" />}
+       </button>
+
+       {open && (
+         <div style={{ position: 'absolute', bottom: '80px', [config.posicao || 'right']: 0, width: '350px', background: 'white', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', overflow: 'hidden', animation: 'slideUp 0.3s ease-out' }}>
+            <div style={{ background: '#25D366', padding: '1.5rem', color: 'white' }}>
+               <h3 style={{ fontWeight: 700, fontSize: '1.1rem' }}>Iniciar Conversa</h3>
+               <p style={{ fontSize: '0.85rem', opacity: 0.9 }}>Escolha um atendente para falar agora.</p>
+            </div>
+
+            <div style={{ padding: '1rem', maxHeight: '400px', overflowY: 'auto' }}>
+               {!showForm ? (
+                 config.atendentes.map((at: any) => (
+                    <div 
+                      key={at.id} 
+                      onClick={() => { setSelectedAttendant(at); setShowForm(true); }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', borderRadius: '12px', cursor: 'pointer', transition: 'background 0.2s', borderBottom: '1px solid #f1f5f9' }}
+                    >
+                       <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                          {at.avatarUrl ? <img src={at.avatarUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <User size={24} color="#94a3b8" />}
+                       </div>
+                       <div style={{ flex: 1 }}>
+                          <h4 style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1e293b' }}>{at.nome}</h4>
+                          <p style={{ fontSize: '0.75rem', color: '#64748b' }}>{at.cargo}</p>
+                          {at.disponibilidade && <p style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: 600, marginTop: '2px' }}>{at.disponibilidade}</p>}
+                       </div>
+                       <MessageCircle size={18} color="#25D366" />
+                    </div>
+                 ))
+               ) : (
+                 <form onSubmit={handleStartChat} style={{ padding: '0.5rem' }}>
+                    <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                       <p style={{ fontSize: '0.85rem', color: '#64748b' }}>Falar com <strong>{selectedAttendant.nome}</strong></p>
+                    </div>
+                    <div style={{ display: 'grid', gap: '1rem' }}>
+                       <input 
+                         required placeholder="Seu Nome" 
+                         style={{ width: '100%', height: '42px', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '0 1rem', color: '#333' }}
+                         value={formData.nome} onChange={e => setFormData({...formData, nome: e.target.value})}
+                       />
+                       <input 
+                         required type="email" placeholder="Seu Email" 
+                         style={{ width: '100%', height: '42px', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '0 1rem', color: '#333' }}
+                         value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})}
+                       />
+                       <input 
+                         required placeholder="Seu WhatsApp" 
+                         style={{ width: '100%', height: '42px', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '0 1rem', color: '#333' }}
+                         value={formData.telefone} onChange={e => setFormData({...formData, telefone: e.target.value})}
+                       />
+                       <button type="submit" style={{ width: '100%', height: '48px', borderRadius: '8px', background: '#25D366', color: 'white', fontWeight: 700, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                          Começar Conversa <ChevronRight size={18} />
+                       </button>
+                       <button type="button" onClick={() => setShowForm(false)} style={{ width: '100%', fontSize: '0.8rem', color: '#94a3b8', border: 'none', background: 'none', cursor: 'pointer', marginTop: '0.5rem' }}>Voltar</button>
+                    </div>
+                 </form>
+               )}
+            </div>
+         </div>
+       )}
+
+       <style jsx>{`
+         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+       `}</style>
+    </div>
+  );
+}
+
 function BenefitItem({ text }: { text: string }) {
   return (
     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', fontSize: '1.1rem', fontWeight: 500 }}>
@@ -323,6 +430,8 @@ function RenderTemplate({ page }: { page: LandingPageInstance }) {
           </div>
         </div>
       </div>
+
+      <WhatsappWidget config={config.whatsapp} pageSlug={page.slug} />
 
       <style jsx>{`
         .landing-container { padding: 4rem 2rem; min-height: 100vh; display: flex; align-items: center; }

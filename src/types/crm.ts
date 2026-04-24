@@ -51,6 +51,21 @@ export interface FilaEnvio {
 
 export type LandingPageTemplate = 'professional' | 'lead-magnet' | 'vsl' | 'minimalist' | 'event' | 'coupon';
 
+export interface Attendant {
+  id: string;
+  nome: string;
+  cargo: string;
+  telefone: string;
+  avatarUrl?: string;
+  disponibilidade?: string;
+}
+
+export interface WhatsappWidgetConfig {
+  enabled: boolean;
+  posicao: 'left' | 'right';
+  atendentes: Attendant[];
+}
+
 export interface LandingPageSettings {
   titulo: string;
   subtitulo: string;
@@ -68,6 +83,7 @@ export interface LandingPageSettings {
   videoUrl?: string;
   eventDate?: string;
   accentColor?: string;
+  whatsapp?: WhatsappWidgetConfig;
 }
 
 export interface LandingPageInstance {

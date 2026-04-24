@@ -140,7 +140,14 @@ const TEMPLATE_DEFAULTS: Record<LandingPageTemplate, Partial<LandingPageSettings
     botaoColor: '#fbbf24',
     formColor: '#ffffff',
     formTitulo: 'Resgatar Cupom',
-    formSubtitulo: 'Complete o cadastro para ver o código do desconto.'
+    formSubtitulo: 'Complete o cadastro para ver o código do desconto.',
+    whatsapp: {
+      enabled: true,
+      posicao: 'right',
+      atendentes: [
+        { id: '1', nome: 'Suporte Visual Super', cargo: 'Atendimento Comercial', telefone: '554899999999', disponibilidade: 'Segunda a Sexta, 08h às 18h' }
+      ]
+    }
   }
 };
 
@@ -509,6 +516,110 @@ export default function MultiCapturaEditor() {
                 </div>
               ))}
             </div>
+          </section>
+
+          {/* WIDGET WHATSAPP */}
+          <section className="card">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600 }}>
+                  <MessageCircle size={20} className="color-primary" /> Widget WhatsApp Multi-Atendente
+               </div>
+               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>Ativo:</span>
+                  <input 
+                    type="checkbox" 
+                    style={{ width: '18px', height: '18px' }}
+                    checked={editingPage.config.whatsapp?.enabled || false}
+                    onChange={e => {
+                        const wa = editingPage.config.whatsapp || { enabled: false, posicao: 'right', atendentes: [] };
+                        setEditingPage({...editingPage, config: {...editingPage.config, whatsapp: {...wa, enabled: e.target.checked}}});
+                    }}
+                  />
+               </div>
+            </div>
+
+            {editingPage.config.whatsapp?.enabled && (
+              <div style={{ display: 'grid', gap: '1.5rem' }}>
+                <div>
+                   <label style={{ fontSize: '0.875rem', marginBottom: '0.5rem', display: 'block' }}>Posição na Tela</label>
+                   <select 
+                     className="btn-outline" style={{ width: '100%', height: '42px', padding: '0 0.5rem' }}
+                     value={editingPage.config.whatsapp.posicao}
+                     onChange={e => {
+                        const wa = editingPage.config.whatsapp!;
+                        setEditingPage({...editingPage, config: {...editingPage.config, whatsapp: {...wa, posicao: e.target.value as any}}});
+                     }}
+                   >
+                     <option value="right">Canto Inferior Direito</option>
+                     <option value="left">Canto Inferior Esquerdo</option>
+                   </select>
+                </div>
+
+                <div>
+                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                      <label style={{ fontSize: '0.875rem', fontWeight: 500 }}>Atendentes</label>
+                      <button className="btn btn-outline" style={{ height: '30px', fontSize: '0.75rem' }} onClick={() => {
+                          const wa = editingPage.config.whatsapp!;
+                          const newAt = { id: Math.random().toString(36).substr(2, 9), nome: 'Novo Atendente', cargo: 'Vendas', telefone: '55', disponibilidade: 'Disponível' };
+                          setEditingPage({...editingPage, config: {...editingPage.config, whatsapp: {...wa, atendentes: [...wa.atendentes, newAt]}}});
+                      }}>+ Novo</button>
+                   </div>
+                   
+                   <div style={{ display: 'grid', gap: '1rem' }}>
+                      {editingPage.config.whatsapp.atendentes.map((at, idx) => (
+                        <div key={at.id} style={{ padding: '1rem', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#f8fafc', position: 'relative' }}>
+                           <button 
+                             onClick={() => {
+                               const wa = editingPage.config.whatsapp!;
+                               const newAt = wa.atendentes.filter((_, i) => i !== idx);
+                               setEditingPage({...editingPage, config: {...editingPage.config, whatsapp: {...wa, atendentes: newAt}}});
+                             }}
+                             style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', color: '#ef4444', opacity: 0.5 }}
+                           ><Trash2 size={16} /></button>
+                           
+                           <div style={{ display: 'grid', gap: '0.75rem' }}>
+                              <input 
+                                placeholder="Nome do Atendente"
+                                style={{ width: '100%', height: '32px', border: 'none', background: 'transparent', fontWeight: 700, borderBottom: '1px solid #e2e8f0' }}
+                                value={at.nome}
+                                onChange={e => {
+                                   const wa = editingPage.config.whatsapp!;
+                                   const newAtArr = [...wa.atendentes];
+                                   newAtArr[idx] = { ...at, nome: e.target.value };
+                                   setEditingPage({...editingPage, config: {...editingPage.config, whatsapp: {...wa, atendentes: newAtArr}}});
+                                }}
+                              />
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                                 <input 
+                                   placeholder="Cargo"
+                                   style={{ fontSize: '0.75rem', width: '100%', height: '30px', borderRadius: '4px', border: '1px solid #e2e8f0', padding: '0 0.5rem' }}
+                                   value={at.cargo}
+                                   onChange={e => {
+                                      const wa = editingPage.config.whatsapp!;
+                                      const newAtArr = [...wa.atendentes];
+                                      newAtArr[idx] = { ...at, cargo: e.target.value };
+                                      setEditingPage({...editingPage, config: {...editingPage.config, whatsapp: {...wa, atendentes: newAtArr}}});
+                                   }}
+                                 />
+                                 <input 
+                                   placeholder="WhatsApp (ex: 5548999999999)"
+                                   style={{ fontSize: '0.75rem', width: '100%', height: '30px', borderRadius: '4px', border: '1px solid #e2e8f0', padding: '0 0.5rem' }}
+                                   value={at.telefone}
+                                   onChange={e => {
+                                      const wa = editingPage.config.whatsapp!;
+                                      const newAtArr = [...wa.atendentes];
+                                      newAtArr[idx] = { ...at, telefone: e.target.value };
+                                      setEditingPage({...editingPage, config: {...editingPage.config, whatsapp: {...wa, atendentes: newAtArr}}});
+                                   }}
+                                 />
+                              </div>
+                           </div>
+                        </div>
+                      ))}
+                   </div>
+                </div>
+              </div>
+            )}
           </section>
         </div>
 
