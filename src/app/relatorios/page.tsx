@@ -99,7 +99,7 @@ export default function RelatoriosPage() {
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h4 style={{ fontWeight: 600 }}>Log de Processamento Recente</h4>
-          <button className="btn btn-outline" onClick={() => setQueue(api.getQueue())}>
+          <button className="btn btn-outline" onClick={refreshData}>
             <RefreshCw size={16} /> Atualizar
           </button>
         </div>
