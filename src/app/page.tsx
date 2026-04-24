@@ -24,6 +24,7 @@ export default function Dashboard() {
   
   const [stats, setStats] = useState({
     totalLeads: 0,
+    leadsHoje: 0,
     totalCampaigns: 0,
     enviadosHoje: 0,
     pendentes: 0,
