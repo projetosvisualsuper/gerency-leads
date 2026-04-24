@@ -257,9 +257,9 @@ export default function LeadsPage() {
                 </td>
                 <td>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button style={{ opacity: 0.6, color: 'var(--primary)' }} onClick={() => { setViewingLead(lead); setIsDetailsOpen(true); }}><Eye size={18} title="Ver Detalhes" /></button>
-                    <button style={{ opacity: 0.4 }} onClick={() => openModal(lead)}><TagIcon size={18} title="Editar" /></button>
-                    <button style={{ opacity: 0.4, color: 'var(--danger)' }} onClick={() => handleDelete(lead.id)}><Trash2 size={18} title="Excluir" /></button>
+                    <button style={{ opacity: 0.6, color: 'var(--primary)' }} onClick={() => { setViewingLead(lead); setIsDetailsOpen(true); }} title="Ver Detalhes"><Eye size={18} /></button>
+                    <button style={{ opacity: 0.4 }} onClick={() => openModal(lead)} title="Editar"><TagIcon size={18} /></button>
+                    <button style={{ opacity: 0.4, color: 'var(--danger)' }} onClick={() => handleDelete(lead.id)} title="Excluir"><Trash2 size={18} /></button>
                   </div>
                 </td>
               </tr>
