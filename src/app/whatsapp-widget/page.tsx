@@ -87,8 +87,12 @@ export default function WhatsappWidgetStandalone() {
                       onMouseOver={e => e.currentTarget.style.background = '#f8fafc'}
                       onMouseOut={e => e.currentTarget.style.background = 'transparent'}
                     >
-                       <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
-                          <User size={20} color="#94a3b8" />
+                       <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                          {at.avatarUrl ? (
+                            <img src={at.avatarUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <User size={20} color="#94a3b8" />
+                          )}
                        </div>
                        <div style={{ flex: 1 }}>
                           <h4 style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1e293b', margin: 0 }}>{at.nome}</h4>

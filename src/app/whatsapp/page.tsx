@@ -10,7 +10,8 @@ import {
   Plus,
   Settings as SettingsIcon,
   ChevronRight,
-  Monitor
+  Monitor,
+  User
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -33,6 +34,26 @@ export default function WhatsappConfigPage() {
     await api.saveSettings(settings);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
+  };
+
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>, idx: number) => {
+    const file = e.target.files?.[0];
+    if (!file || !settings?.whatsappWidget) return;
+
+    if (file.size > 500 * 1024) {
+      alert("Imagem muito grande! Use até 500KB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      const wa = settings.whatsappWidget!;
+      const newAtArr = [...wa.atendentes];
+      newAtArr[idx] = { ...newAtArr[idx], avatarUrl: base64String };
+      setSettings({ ...settings, whatsappWidget: { ...wa, atendentes: newAtArr } });
+    };
+    reader.readAsDataURL(file);
   };
 
   if (loading || !settings) return <div style={{ padding: '2rem' }}>Carregando Configurações do WhatsApp...</div>;
@@ -113,8 +134,35 @@ export default function WhatsappConfigPage() {
                               style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', color: '#ef4444', opacity: 0.5, border: 'none', background: 'none', cursor: 'pointer' }}
                             ><Trash2 size={16} /></button>
                             
-                            <div style={{ display: 'grid', gap: '1rem' }}>
-                               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'start' }}>
+                                {/* Avatar Column */}
+                                <div style={{ display: 'grid', gap: '0.5rem', textAlign: 'center' }}>
+                                   <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#fff', border: '2px solid #e2e8f0', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                                      {at.avatarUrl ? (
+                                        <img src={at.avatarUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                      ) : (
+                                        <User size={32} color="#94a3b8" />
+                                      )}
+                                   </div>
+                                   <label style={{ fontSize: '0.65rem', color: 'var(--primary)', cursor: 'pointer', fontWeight: 600, textTransform: 'uppercase' }}>
+                                      Foto
+                                      <input type="file" hidden accept="image/*" onChange={e => handleAvatarUpload(e, idx)} />
+                                   </label>
+                                   {at.avatarUrl && (
+                                     <button 
+                                       onClick={() => {
+                                         const wa = settings.whatsappWidget!;
+                                         const newAtArr = [...wa.atendentes];
+                                         newAtArr[idx] = { ...at, avatarUrl: undefined };
+                                         setSettings({...settings, whatsappWidget: {...wa, atendentes: newAtArr}});
+                                       }}
+                                       style={{ fontSize: '0.65rem', color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer' }}
+                                     >Remover</button>
+                                   )}
+                                </div>
+
+                                <div style={{ flex: 1, display: 'grid', gap: '1rem' }}>
+                                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                                   <div>
                                      <label style={{ fontSize: '0.7rem', opacity: 0.6, fontWeight: 700, textTransform: 'uppercase' }}>Nome</label>
                                      <input 

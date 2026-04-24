@@ -22,7 +22,8 @@ import {
   MousePointerClick,
   Copy,
   LayoutTemplate,
-  MessageCircle
+  MessageCircle,
+  User
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -286,8 +287,27 @@ export default function MultiCapturaEditor() {
 
     await api.saveLandingPage(editingPage);
     setSaved(true);
-    await loadData();
     setTimeout(() => setSaved(false), 3000);
+  };
+
+  const handleAtendenteAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>, idx: number) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingPage?.config.whatsapp) return;
+
+    if (file.size > 500 * 1024) {
+      alert("Imagem muito grande! Use até 500KB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      const wa = editingPage.config.whatsapp!;
+      const newAtArr = [...wa.atendentes];
+      newAtArr[idx] = { ...newAtArr[idx], avatarUrl: base64String };
+      setEditingPage({ ...editingPage, config: { ...editingPage.config, whatsapp: { ...wa, atendentes: newAtArr } } });
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleDelete = async (id: string) => {
@@ -603,51 +623,68 @@ export default function MultiCapturaEditor() {
                    
                    <div style={{ display: 'grid', gap: '1rem' }}>
                       {editingPage.config.whatsapp.atendentes.map((at, idx) => (
-                        <div key={at.id} style={{ padding: '1rem', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#f8fafc', position: 'relative' }}>
+                        <div key={at.id} style={{ padding: '1rem', border: '1px solid #e2e8f0', borderRadius: '8px', background: 'white', position: 'relative' }}>
                            <button 
                              onClick={() => {
                                const wa = editingPage.config.whatsapp!;
-                               const newAt = wa.atendentes.filter((_, i) => i !== idx);
-                               setEditingPage({...editingPage, config: {...editingPage.config, whatsapp: {...wa, atendentes: newAt}}});
+                               const newAtArr = wa.atendentes.filter((_, i) => i !== idx);
+                               setEditingPage({...editingPage, config: {...editingPage.config, whatsapp: {...wa, atendentes: newAtArr}}});
                              }}
-                             style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', color: '#ef4444', opacity: 0.5 }}
+                             style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', color: '#ef4444', opacity: 0.5, border: 'none', background: 'none', cursor: 'pointer' }}
                            ><Trash2 size={16} /></button>
                            
-                           <div style={{ display: 'grid', gap: '0.75rem' }}>
-                              <input 
-                                placeholder="Nome do Atendente"
-                                style={{ width: '100%', height: '32px', border: 'none', background: 'transparent', fontWeight: 700, borderBottom: '1px solid #e2e8f0' }}
-                                value={at.nome}
-                                onChange={e => {
-                                   const wa = editingPage.config.whatsapp!;
-                                   const newAtArr = [...wa.atendentes];
-                                   newAtArr[idx] = { ...at, nome: e.target.value };
-                                   setEditingPage({...editingPage, config: {...editingPage.config, whatsapp: {...wa, atendentes: newAtArr}}});
-                                }}
-                              />
-                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                           <div style={{ display: 'flex', gap: '1rem', alignItems: 'start', marginTop: '0.5rem' }}>
+                              {/* Avatar Column */}
+                              <div style={{ display: 'grid', gap: '0.4rem', textAlign: 'center' }}>
+                                 <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#f8fafc', border: '1px solid #e2e8f0', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {at.avatarUrl ? (
+                                      <img src={at.avatarUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    ) : (
+                                      <User size={24} color="#94a3b8" />
+                                    )}
+                                 </div>
+                                 <label style={{ fontSize: '0.6rem', color: 'var(--primary)', cursor: 'pointer', fontWeight: 600 }}>
+                                    FOTO
+                                    <input type="file" hidden accept="image/*" onChange={e => handleAtendenteAvatarUpload(e, idx)} />
+                                 </label>
+                              </div>
+
+                              <div style={{ flex: 1, display: 'grid', gap: '0.75rem' }}>
                                  <input 
-                                   placeholder="Cargo"
-                                   style={{ fontSize: '0.75rem', width: '100%', height: '30px', borderRadius: '4px', border: '1px solid #e2e8f0', padding: '0 0.5rem' }}
-                                   value={at.cargo}
-                                   onChange={e => {
-                                      const wa = editingPage.config.whatsapp!;
-                                      const newAtArr = [...wa.atendentes];
-                                      newAtArr[idx] = { ...at, cargo: e.target.value };
-                                      setEditingPage({...editingPage, config: {...editingPage.config, whatsapp: {...wa, atendentes: newAtArr}}});
-                                   }}
+                                    placeholder="Nome do Atendente"
+                                    style={{ width: '100%', height: '32px', border: 'none', background: 'transparent', fontWeight: 700, borderBottom: '1px solid #e2e8f0', fontSize: '0.9rem' }}
+                                    value={at.nome}
+                                    onChange={e => {
+                                       const wa = editingPage.config.whatsapp!;
+                                       const newAtArr = [...wa.atendentes];
+                                       newAtArr[idx] = { ...at, nome: e.target.value };
+                                       setEditingPage({...editingPage, config: {...editingPage.config, whatsapp: {...wa, atendentes: newAtArr}}});
+                                    }}
                                  />
-                                 <input 
-                                   placeholder="WhatsApp (ex: 5548999999999)"
-                                   style={{ fontSize: '0.75rem', width: '100%', height: '30px', borderRadius: '4px', border: '1px solid #e2e8f0', padding: '0 0.5rem' }}
-                                   value={at.telefone}
-                                   onChange={e => {
-                                      const wa = editingPage.config.whatsapp!;
-                                      const newAtArr = [...wa.atendentes];
-                                      newAtArr[idx] = { ...at, telefone: e.target.value };
-                                      setEditingPage({...editingPage, config: {...editingPage.config, whatsapp: {...wa, atendentes: newAtArr}}});
-                                   }}
-                                 />
+                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                                    <input 
+                                       placeholder="Cargo"
+                                       style={{ fontSize: '0.75rem', width: '100%', height: '30px', borderRadius: '4px', border: '1px solid #e2e8f0', padding: '0 0.5rem' }}
+                                       value={at.cargo}
+                                       onChange={e => {
+                                          const wa = editingPage.config.whatsapp!;
+                                          const newAtArr = [...wa.atendentes];
+                                          newAtArr[idx] = { ...at, cargo: e.target.value };
+                                          setEditingPage({...editingPage, config: {...editingPage.config, whatsapp: {...wa, atendentes: newAtArr}}});
+                                       }}
+                                    />
+                                    <input 
+                                       placeholder="WhatsApp"
+                                       style={{ fontSize: '0.75rem', width: '100%', height: '30px', borderRadius: '4px', border: '1px solid #e2e8f0', padding: '0 0.5rem' }}
+                                       value={at.telefone}
+                                       onChange={e => {
+                                          const wa = editingPage.config.whatsapp!;
+                                          const newAtArr = [...wa.atendentes];
+                                          newAtArr[idx] = { ...at, telefone: e.target.value };
+                                          setEditingPage({...editingPage, config: {...editingPage.config, whatsapp: {...wa, atendentes: newAtArr}}});
+                                       }}
+                                    />
+                                 </div>
                               </div>
                            </div>
                         </div>
