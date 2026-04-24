@@ -44,8 +44,8 @@ export default function WhatsappConfigPage() {
           <h2 style={{ fontSize: '2rem', fontWeight: 'bold' }}>Gerador de Botão WhatsApp</h2>
           <p style={{ opacity: 0.6 }}>Crie um botão flutuante profissional para o seu site principal.</p>
         </div>
-        <button className="btn btn-primary" onClick={handleSave} style={{ padding: '0 2rem' }}>
-          <Save size={18} /> Salvar Configurações
+        <button className="btn btn-primary" onClick={handleSave} style={{ height: '50px', padding: '0 2.5rem', fontSize: '1rem' }}>
+          <Save size={20} /> Salvar Configurações
         </button>
       </header>
 
