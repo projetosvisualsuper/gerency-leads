@@ -126,4 +126,5 @@ export interface Settings {
     linkedin: string;
     youtube: string;
   };
+  whatsappWidget?: WhatsappWidgetConfig;
 }

@@ -57,6 +57,13 @@ const initialSettings: Settings = {
     instagram: 'https://instagram.com',
     linkedin: 'https://linkedin.com',
     youtube: 'https://youtube.com'
+  },
+  whatsappWidget: {
+    enabled: true,
+    posicao: 'right',
+    atendentes: [
+      { id: '1', nome: 'Atendimento Comercial', cargo: 'Vendas', telefone: '554899999999', disponibilidade: '08:00 às 18:00' }
+    ]
   }
 };
 
@@ -219,7 +226,8 @@ export const api = {
       ...settings,
       notificacoes: { ...initialSettings.notificacoes, ...(settings.notificacoes || {}) },
       landingPage: { ...initialSettings.landingPage, ...(settings.landingPage || {}) },
-      empresa: { ...initialSettings.empresa, ...(settings.empresa || {}) }
+      empresa: { ...initialSettings.empresa, ...(settings.empresa || {}) },
+      whatsappWidget: { ...initialSettings.whatsappWidget, ...(settings.whatsappWidget || {}) }
     };
   },
 
