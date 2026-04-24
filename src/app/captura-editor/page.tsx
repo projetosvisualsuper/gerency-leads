@@ -73,7 +73,9 @@ const TEMPLATE_DEFAULTS: Record<LandingPageTemplate, Partial<LandingPageSettings
     botaoTexto: 'Agendar Demonstração',
     backgroundUrl: '/images/sales-bg.png',
     botaoColor: '#FFB948',
-    formColor: '#4285F4'
+    formColor: '#4285F4',
+    formTitulo: 'Solicite uma demonstração',
+    formSubtitulo: 'Preencha o formulário e um consultor entrará em contato.'
   },
   'lead-magnet': {
     titulo: 'MATERIAL GRATUITO',
@@ -84,7 +86,9 @@ const TEMPLATE_DEFAULTS: Record<LandingPageTemplate, Partial<LandingPageSettings
     botaoTexto: 'Baixar Catálogo Agora',
     backgroundUrl: '/images/catalog-bg.png',
     botaoColor: '#2563eb',
-    formColor: '#ffffff'
+    formColor: '#ffffff',
+    formTitulo: 'Receber Material',
+    formSubtitulo: 'Informe seus dados para liberar o acesso ao PDF.'
   },
   vsl: {
     titulo: 'TREINAMENTO ONLINE',
@@ -95,7 +99,9 @@ const TEMPLATE_DEFAULTS: Record<LandingPageTemplate, Partial<LandingPageSettings
     botaoTexto: 'Quero Garantir Minha Vaga',
     backgroundUrl: '/images/vsl-bg.png',
     botaoColor: '#ef4444',
-    formColor: '#1e293b'
+    formColor: '#1e293b',
+    formTitulo: 'Garantir Acesso',
+    formSubtitulo: 'Cadastre-se para assistir ao conteúdo completo.'
   },
   event: {
     titulo: 'CONVITE ESPECIAL',
@@ -106,7 +112,9 @@ const TEMPLATE_DEFAULTS: Record<LandingPageTemplate, Partial<LandingPageSettings
     botaoTexto: 'Fazer Minha Inscrição',
     backgroundUrl: 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&q=80',
     botaoColor: '#e11d48',
-    formColor: '#ffffff'
+    formColor: '#ffffff',
+    formTitulo: 'Inscrição Gratuita',
+    formSubtitulo: 'Garanta sua vaga no workshop ao vivo.'
   },
   minimalist: {
     titulo: 'CONTATO DIRETO',
@@ -117,7 +125,9 @@ const TEMPLATE_DEFAULTS: Record<LandingPageTemplate, Partial<LandingPageSettings
     botaoTexto: 'Enviar Dados',
     backgroundUrl: '/images/minimalist-bg.png',
     botaoColor: '#3b82f6',
-    formColor: '#1e293b'
+    formColor: '#1e293b',
+    formTitulo: 'Solicitar Proposta',
+    formSubtitulo: 'Entraremos em contato o mais breve possível.'
   },
   coupon: {
     titulo: 'OFERTA IMPERDÍVEL',
@@ -128,7 +138,9 @@ const TEMPLATE_DEFAULTS: Record<LandingPageTemplate, Partial<LandingPageSettings
     botaoTexto: 'Pegar Meu Cupom',
     backgroundUrl: '/images/coupon-bg.png',
     botaoColor: '#fbbf24',
-    formColor: '#ffffff'
+    formColor: '#ffffff',
+    formTitulo: 'Resgatar Cupom',
+    formSubtitulo: 'Complete o cadastro para ver o código do desconto.'
   }
 };
 
@@ -513,7 +525,37 @@ export default function MultiCapturaEditor() {
                   <label style={{ fontSize: '0.75rem', opacity: 0.6 }}>Cor do Botão Principal</label>
                   <input type="color" style={{ width: '100%', height: '40px', border: 'none', cursor: 'pointer' }} value={editingPage.config.botaoColor} onChange={e => setEditingPage({...editingPage, config: {...editingPage.config, botaoColor: e.target.value}})} />
                 </div>
+                <div>
+                   <label style={{ fontSize: '0.75rem', opacity: 0.6 }}>Texto do Botão CTA</label>
+                   <input 
+                    className="btn-outline" style={{ width: '100%', height: '40px', padding: '0 0.75rem', fontSize: '0.875rem' }}
+                    value={editingPage.config.botaoTexto}
+                    onChange={e => setEditingPage({...editingPage, config: {...editingPage.config, botaoTexto: e.target.value}})}
+                   />
+                 </div>
              </div>
+          </section>
+
+          <section className="card">
+            <h4 style={{ marginBottom: '1rem', fontWeight: 600 }}>Textos do Formulário</h4>
+            <div style={{ display: 'grid', gap: '1rem' }}>
+                <div>
+                   <label style={{ fontSize: '0.75rem', opacity: 0.6 }}>Título do Formulário</label>
+                   <input 
+                    className="btn-outline" style={{ width: '100%', height: '40px', padding: '0 0.75rem', fontSize: '0.875rem' }}
+                    value={editingPage.config.formTitulo}
+                    onChange={e => setEditingPage({...editingPage, config: {...editingPage.config, formTitulo: e.target.value}})}
+                   />
+                </div>
+                <div>
+                   <label style={{ fontSize: '0.75rem', opacity: 0.6 }}>Subtítulo do Formulário</label>
+                   <input 
+                    className="btn-outline" style={{ width: '100%', height: '40px', padding: '0 0.75rem', fontSize: '0.875rem' }}
+                    value={editingPage.config.formSubtitulo}
+                    onChange={e => setEditingPage({...editingPage, config: {...editingPage.config, formSubtitulo: e.target.value}})}
+                   />
+                </div>
+            </div>
           </section>
 
           <section className="card">
