@@ -21,7 +21,8 @@ import {
   Settings as SettingsIcon,
   MousePointerClick,
   Copy,
-  LayoutTemplate
+  LayoutTemplate,
+  MessageCircle
 } from 'lucide-react';
 import Link from 'next/link';
 
