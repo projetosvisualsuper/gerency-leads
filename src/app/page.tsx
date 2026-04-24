@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/services/api';
-import { Lead, Campaign } from '@/types/crm';
+import { Lead, Campaign, FilaEnvio } from '@/types/crm';
 import { useRouter } from 'next/navigation';
 import { 
   Users, 
@@ -22,7 +22,16 @@ export default function Dashboard() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importStatus, setImportStatus] = useState('');
   
-  const [stats, setStats] = useState({
+  interface DashboardStats {
+    totalLeads: number;
+    leadsHoje: number;
+    totalCampaigns: number;
+    enviadosHoje: number;
+    pendentes: number;
+    limiteRestante: number;
+  }
+
+  const [stats, setStats] = useState<DashboardStats>({
     totalLeads: 0,
     leadsHoje: 0,
     totalCampaigns: 0,
