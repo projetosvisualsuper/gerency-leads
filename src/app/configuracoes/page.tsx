@@ -244,10 +244,10 @@ export default function ConfigPage() {
           </div>
         </section>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginBottom: '4rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginBottom: '4rem', alignItems: 'center' }}>
           {saved && <span style={{ color: 'var(--success)', fontSize: '0.875rem' }}>Configurações aplicadas com sucesso!</span>}
-          <button className="btn btn-primary" onClick={handleSave} style={{ padding: '0 2rem' }}>
-            <Save size={18} /> Salvar Tudo
+          <button className="btn btn-primary" onClick={handleSave} style={{ height: '50px', padding: '0 2.5rem', fontSize: '1rem' }}>
+            <Save size={20} /> Salvar Tudo
           </button>
         </div>
       </div>
