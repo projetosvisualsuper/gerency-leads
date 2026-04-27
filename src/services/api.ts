@@ -262,23 +262,17 @@ export const api = {
     if (!apiKey) return { success: false, message: 'API Key não informada.' };
     
     try {
-      const response = await fetch('https://api.brevo.com/v3/account', {
-        method: 'GET',
+      const response = await fetch('/api/brevo/test', {
+        method: 'POST',
         headers: {
-          'accept': 'application/json',
-          'api-key': apiKey
-        }
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({ apiKey })
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        return { success: false, message: errorData.message || 'Chave de API inválida ou expirada.' };
-      }
-
-      const data = await response.json();
-      return { success: true, message: 'Conectado com sucesso!', account: data };
+      return await response.json();
     } catch (error: any) {
-      return { success: false, message: 'Erro ao conectar com o servidor do Brevo.' };
+      return { success: false, message: 'Erro ao conectar com o serviço de validação.' };
     }
   },
 
