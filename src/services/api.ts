@@ -328,7 +328,7 @@ export const api = {
       if (result.success) {
         item.status = 'enviado';
         item.dataEnvio = new Date().toISOString();
-        item.erroMensagem = undefined;
+        item.erroMensagem = null;
         processedCount++;
       } else {
         item.status = 'erro';
