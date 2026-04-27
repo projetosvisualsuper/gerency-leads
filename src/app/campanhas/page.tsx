@@ -72,15 +72,25 @@ export default function CampanhasPage() {
     loadData();
   }, []);
 
-  // Helper para gerar o HTML profissional seguindo o print do usuário
   const generateProfessionalHTML = async (text: string, subject: string, bannerImg?: string) => {
     const settings = await api.getSettings();
     const brandName = settings.landingPage?.titulo || 'Gerency Leads';
     const brandColor = settings.landingPage?.formColor || '#3b82f6';
     const logoUrl = settings.landingPage?.logoUrl;
+    const websiteUrl = settings.empresa?.website.startsWith('http') ? settings.empresa.website : 'https://' + settings.empresa?.website;
+
+    // Helper para garantir URL absoluta nas imagens
+    const getAbsoluteUrl = (url: string) => {
+      if (!url) return '';
+      if (url.startsWith('http')) return url;
+      return `${websiteUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+    };
 
     const paragraphs = text.split('\n').filter(p => p.trim() !== '');
-    const formattedBody = paragraphs.map(p => `<p style="margin-bottom: 20px; color: #374151; font-size: 16px; line-height: 1.6;">${p}</p>`).join('');
+    const formattedBody = paragraphs.map(p => `
+      <p style="margin: 0 0 20px 0; color: #374151; font-family: 'Segoe UI', Arial, sans-serif; font-size: 16px; line-height: 1.6;">
+        ${p}
+      </p>`).join('');
 
     const empresa = settings.empresa || {
       website: 'www.visualsuper.com.br',
@@ -92,65 +102,102 @@ export default function CampanhasPage() {
     };
 
     return `
-      <!DOCTYPE html>
-      <html>
+      <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+      <html xmlns="http://www.w3.org/1999/xhtml">
       <head>
-        <meta charset="utf-8">
-        <style>
-          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f8fafc; color: #334155; }
-          .wrapper { background-color: #f8fafc; padding: 40px 0; }
-          .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-top: 5px solid ${brandColor}; }
-          .header { background-color: ${brandColor}; padding: 40px 20px; text-align: center; }
-          .logo { max-height: 70px; width: auto; }
-          .banner { width: 100%; display: block; }
-          .content { padding: 40px 50px; }
-          .footer { padding: 40px 20px; text-align: center; font-size: 13px; color: #64748b; border-top: 1px solid #e2e8f0; background-color: #ffffff; }
-          .button-container { text-align: center; margin: 30px 0; }
-          .button { display: inline-block; padding: 18px 45px; background-color: #4f46e5; color: #ffffff; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 16px; }
-          .social-icons { margin: 25px 0; }
-          .social-icon { display: inline-block; margin: 0 8px; width: 32px; height: 32px; }
-        </style>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>${subject}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
       </head>
-      <body>
-        <div class="wrapper">
-          <div class="container">
-            <!-- Header with Logo -->
-            <div class="header">
-              ${logoUrl ? `<img src="${logoUrl}" alt="${brandName}" class="logo">` : `<h1 style="color: white; margin: 0;">${brandName}</h1>`}
-            </div>
+      <body style="margin: 0; padding: 0; background-color: #f8fafc;">
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; padding: 40px 10px;">
+          <tr>
+            <td align="center">
+              <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-top: 5px solid ${brandColor}; border-collapse: collapse; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                <!-- Header -->
+                <tr>
+                  <td align="center" style="padding: 40px 20px; background-color: ${brandColor};">
+                    ${logoUrl 
+                      ? `<img src="${getAbsoluteUrl(logoUrl)}" alt="${brandName}" style="max-height: 70px; width: auto; display: block;" border="0">` 
+                      : `<h1 style="color: #ffffff; margin: 0; font-family: Arial, sans-serif; font-size: 28px;">${brandName}</h1>`
+                    }
+                  </td>
+                </tr>
 
-            <!-- Banner Image -->
-            ${bannerImg ? `<img src="${bannerImg}" class="banner" alt="Destaque">` : ''}
+                <!-- Banner -->
+                ${bannerImg ? `
+                <tr>
+                  <td align="center">
+                    <img src="${getAbsoluteUrl(bannerImg)}" alt="Destaque" width="600" style="width: 100%; max-width: 600px; display: block;" border="0">
+                  </td>
+                </tr>` : ''}
 
-            <!-- Main Content -->
-            <div class="content">
-              ${formattedBody}
-              <div class="button-container">
-                <a href="${empresa.website.startsWith('http') ? empresa.website : 'https://' + empresa.website}" class="button">Clique para acessar todos os detalhes!</a>
-              </div>
-              <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;">
-              <p style="font-weight: bold; color: #1e293b; font-size: 18px;">Conte com a <span style="color: #4f46e5;">${brandName}</span>! 💙</p>
-            </div>
+                <!-- Content -->
+                <tr>
+                  <td style="padding: 40px 50px; background-color: #ffffff;">
+                    ${formattedBody}
+                    
+                    <!-- Button -->
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td align="center" style="padding: 30px 0;">
+                          <a href="${websiteUrl}" target="_blank" style="background-color: #4f46e5; color: #ffffff; padding: 18px 45px; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 16px; display: inline-block; font-family: Arial, sans-serif;">
+                            Clique para acessar todos os detalhes!
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
 
-            <!-- Footer -->
-            <div class="footer">
-              <p style="text-transform: uppercase; letter-spacing: 1px; color: #475569; font-weight: 600;">Nossas Redes Sociais</p>
-              <div class="social-icons">
-                <a href="${empresa.facebook}"><img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg" class="social-icon"></a>
-                <a href="${empresa.instagram}"><img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg" class="social-icon"></a>
-                <a href="${empresa.linkedin}"><img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png" class="social-icon"></a>
-                <a href="${empresa.youtube}"><img src="https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png" class="social-icon"></a>
-              </div>
-              <p>Visualizar este e-mail como <a href="${empresa.website}" style="color: #4f46e5; text-decoration: none;">página web</a></p>
-              <p style="margin-top: 20px;">Enviado por <a href="${empresa.website.startsWith('http') ? empresa.website : 'https://' + empresa.website}" style="color: #4f46e5; text-decoration: none; font-weight: bold;">${empresa.website}</a></p>
-              <p style="opacity: 0.8;">${empresa.endereco}</p>
-              <p style="margin-top: 20px; font-size: 11px;">Caso não queira mais receber estes e-mails, <a href="#" style="color: #64748b; text-decoration: underline;">cancele sua inscrição</a>.</p>
-            </div>
-          </div>
-        </div>
+                    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+                    <p style="font-family: Arial, sans-serif; font-weight: bold; color: #1e293b; font-size: 18px; margin: 0;">
+                      Conte com a <span style="color: #4f46e5;">${brandName}</span>! 💙
+                    </p>
+                  </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                  <td align="center" style="padding: 40px 20px; background-color: #ffffff; border-top: 1px solid #e2e8f0;">
+                    <p style="margin: 0; text-transform: uppercase; letter-spacing: 1px; color: #475569; font-weight: 600; font-family: Arial, sans-serif; font-size: 12px;">Nossas Redes Sociais</p>
+                    
+                    <table border="0" cellpadding="0" cellspacing="0" style="margin: 25px 0;">
+                      <tr>
+                        <td style="padding: 0 8px;">
+                          <a href="${empresa.facebook}"><img src="https://img.icons8.com/fluent/48/000000/facebook-new.png" width="32" height="32" style="display: block;" border="0"></a>
+                        </td>
+                        <td style="padding: 0 8px;">
+                          <a href="${empresa.instagram}"><img src="https://img.icons8.com/fluent/48/000000/instagram-new.png" width="32" height="32" style="display: block;" border="0"></a>
+                        </td>
+                        <td style="padding: 0 8px;">
+                          <a href="${empresa.linkedin}"><img src="https://img.icons8.com/fluent/48/000000/linkedin.png" width="32" height="32" style="display: block;" border="0"></a>
+                        </td>
+                        <td style="padding: 0 8px;">
+                          <a href="${empresa.youtube}"><img src="https://img.icons8.com/fluent/48/000000/youtube-play.png" width="32" height="32" style="display: block;" border="0"></a>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <p style="margin: 10px 0; font-family: Arial, sans-serif; font-size: 13px; color: #64748b;">
+                      Visualizar este e-mail como <a href="${websiteUrl}" style="color: #4f46e5; text-decoration: none;">página web</a>
+                    </p>
+                    <p style="margin: 20px 0 5px 0; font-family: Arial, sans-serif; font-size: 13px; color: #64748b;">
+                      Enviado por <a href="${websiteUrl}" style="color: #4f46e5; text-decoration: none; font-weight: bold;">${empresa.website}</a>
+                    </p>
+                    <p style="margin: 0; font-family: Arial, sans-serif; font-size: 12px; color: #94a3b8; line-height: 1.4;">
+                      ${empresa.endereco}
+                    </p>
+                    <p style="margin-top: 25px; font-family: Arial, sans-serif; font-size: 11px; color: #94a3b8;">
+                      Caso não queira mais receber estes e-mails, <a href="#" style="color: #64748b; text-decoration: underline;">cancele sua inscrição</a>.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
       </body>
       </html>
-    `.trim();
+    `;
   };
 
   const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
