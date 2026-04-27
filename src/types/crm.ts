@@ -44,7 +44,7 @@ export interface FilaEnvio {
   tentativa: number;
   dataAgendada: string;
   dataEnvio?: string;
-  erroMensagem?: string;
+  erroMensagem?: string | null;
   loteNumero?: number;
   prioridade: number;
 }
