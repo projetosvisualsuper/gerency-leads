@@ -279,7 +279,14 @@ export default function CampanhasPage() {
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           {isProcessingQueue && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--success)', color: 'white', padding: '0.5rem 1rem', borderRadius: '50px', fontSize: '0.875rem' }}>
-              <div className="spinner" style={{ width: '16px', height: '16px', border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+              <div style={{ 
+                width: '16px', 
+                height: '16px', 
+                border: '2px solid white', 
+                borderTopColor: 'transparent', 
+                borderRadius: '50%',
+                display: 'inline-block'
+              }}></div>
               {processMessage || 'Enviando e-mails...'}
             </div>
           )}
@@ -296,12 +303,6 @@ export default function CampanhasPage() {
           </button>
         </div>
       </header>
-
-      <style jsx>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
 
       {isCreating && (
         <div className="card" style={{ marginBottom: '2.5rem', border: '2px solid var(--primary)' }}>
