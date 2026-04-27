@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/services/api';
 import { Settings } from '@/types/crm';
+import { testBrevoConnectionAction } from '@/app/actions/brevo';
 import { 
   Save, 
   Key, 
@@ -115,7 +116,7 @@ export default function ConfigPage() {
                   className="btn btn-outline" 
                   style={{ fontSize: '0.75rem', height: '32px', borderColor: 'var(--primary)', color: 'var(--primary)' }}
                   onClick={async () => {
-                    const result = await api.checkBrevoConnection(settings.brevoApiKey);
+                    const result = await testBrevoConnectionAction(settings.brevoApiKey);
                     alert(result.message);
                   }}
                 >

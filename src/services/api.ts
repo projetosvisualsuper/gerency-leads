@@ -1,6 +1,6 @@
 import { Lead, Campaign, FilaEnvio, Settings, LandingPageInstance, LandingPageSettings } from '@/types/crm';
 import { db } from '@/lib/firebase';
-import { testBrevoConnectionAction, sendEmailBrevoAction } from '@/app/actions/brevo';
+import { sendEmailBrevoAction } from '@/app/actions/brevo';
 import { 
   collection, 
   getDocs, 
@@ -263,29 +263,7 @@ export const api = {
     return count;
   },
 
-  // Check Brevo Connection
-  checkBrevoConnection: async (apiKey: string) => {
-    return await testBrevoConnectionAction(apiKey);
-  },
-
-  // Real Brevo Sending
-  sendEmailBrevo: async (campaign: Campaign, lead: Lead, settings: Settings): Promise<{ success: boolean; message: string }> => {
-    if (!lead.consentimentoLGPD) return { success: false, message: 'Lead sem consentimento LGPD.' };
-    if (!lead.email.includes('@')) return { success: false, message: 'E-mail inválido.' };
-
-    try {
-      const result = await sendEmailBrevoAction({
-        apiKey: settings.brevoApiKey,
-        sender: { name: settings.remetenteNome, email: settings.remetenteEmail },
-        to: [{ email: lead.email, name: lead.nome }],
-        subject: campaign.assunto,
-        htmlContent: campaign.conteudoHtml.replace('{{nome}}', lead.nome)
-      });
-      return { success: result.success, message: result.message };
-    } catch (error: any) {
-      return { success: false, message: 'Erro na ponte de disparo.' };
-    }
-  },
+  // Brevo Actions handled directly in components to avoid build conflicts
 
   // Queue Processing Engine
   processQueue: async (onProgress?: (msg: string) => void) => {
@@ -323,7 +301,13 @@ export const api = {
       if (!campaign || !lead) continue;
 
       item.tentativa += 1;
-      const result = await api.sendEmailBrevo(campaign, lead, settings);
+      const result = await sendEmailBrevoAction({
+        apiKey: settings.brevoApiKey,
+        sender: { name: settings.remetenteNome, email: settings.remetenteEmail },
+        to: [{ email: lead.email, name: lead.nome }],
+        subject: campaign.assunto,
+        htmlContent: campaign.conteudoHtml.replace('{{nome}}', lead.nome)
+      });
 
       if (result.success) {
         item.status = 'enviado';
