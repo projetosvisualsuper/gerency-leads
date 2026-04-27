@@ -31,6 +31,8 @@ export default function CampanhasPage() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isGeneratingIA, setIsGeneratingIA] = useState(false);
   const [selectedCampaignHtml, setSelectedCampaignHtml] = useState<string | null>(null);
+  const [isProcessingQueue, setIsProcessingQueue] = useState(false);
+  const [processMessage, setProcessMessage] = useState('');
   
   // Custom Delete Confirm State
   const [deleteConfirm, setDeleteConfirm] = useState<{
@@ -232,11 +234,24 @@ export default function CampanhasPage() {
     
     await api.saveCampaign(updatedCampaign);
     setCampaigns(await api.getCampaigns());
+    
     setAlertModal({
       isOpen: true,
       title: 'Fila Gerada',
-      message: `Sucesso! Fila de envio gerada com ${queue.length} e-mails agendados.`
+      message: `Sucesso! Fila de envio gerada com ${queue.length} e-mails agendados. O disparo começará em instantes.`
     });
+
+    // Iniciar processamento automaticamente
+    handleProcessQueue();
+  };
+
+  const handleProcessQueue = async () => {
+    if (isProcessingQueue) return;
+    setIsProcessingQueue(true);
+    await api.processQueue((msg) => setProcessMessage(msg));
+    setCampaigns(await api.getCampaigns());
+    setIsProcessingQueue(false);
+    setProcessMessage('');
   };
 
   const handleDeleteCampaign = (id: string, nome: string) => {
@@ -261,10 +276,32 @@ export default function CampanhasPage() {
           <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>Campanhas de E-mail</h2>
           <p style={{ opacity: 0.6 }}>Crie e monitore seus envios em massa.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setIsCreating(true)}>
-          <Plus size={18} /> Nova Campanha
-        </button>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          {isProcessingQueue && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--success)', color: 'white', padding: '0.5rem 1rem', borderRadius: '50px', fontSize: '0.875rem' }}>
+              <div className="spinner" style={{ width: '16px', height: '16px', border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+              {processMessage || 'Enviando e-mails...'}
+            </div>
+          )}
+          <button 
+            className="btn btn-outline" 
+            onClick={handleProcessQueue}
+            disabled={isProcessingQueue}
+            style={{ borderColor: 'var(--primary)', color: 'var(--primary)' }}
+          >
+            <Clock size={18} /> {isProcessingQueue ? 'Processando...' : 'Processar Fila'}
+          </button>
+          <button className="btn btn-primary" onClick={() => setIsCreating(true)}>
+            <Plus size={18} /> Nova Campanha
+          </button>
+        </div>
       </header>
+
+      <style jsx>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
 
       {isCreating && (
         <div className="card" style={{ marginBottom: '2.5rem', border: '2px solid var(--primary)' }}>

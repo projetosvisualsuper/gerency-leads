@@ -257,6 +257,31 @@ export const api = {
     return count;
   },
 
+  // Check Brevo Connection
+  checkBrevoConnection: async (apiKey: string): Promise<{ success: boolean; message: string; account?: any }> => {
+    if (!apiKey) return { success: false, message: 'API Key não informada.' };
+    
+    try {
+      const response = await fetch('https://api.brevo.com/v3/account', {
+        method: 'GET',
+        headers: {
+          'accept': 'application/json',
+          'api-key': apiKey
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, message: errorData.message || 'Chave de API inválida ou expirada.' };
+      }
+
+      const data = await response.json();
+      return { success: true, message: 'Conectado com sucesso!', account: data };
+    } catch (error: any) {
+      return { success: false, message: 'Erro ao conectar com o servidor do Brevo.' };
+    }
+  },
+
   // Real Brevo Sending
   sendEmailBrevo: async (campaign: Campaign, lead: Lead, settings: Settings): Promise<{ success: boolean; message: string }> => {
     if (!lead.consentimentoLGPD) return { success: false, message: 'Lead sem consentimento LGPD.' };
@@ -340,13 +365,15 @@ export const api = {
       // Update Firestore item
       await updateDoc(doc(db, COLLECTIONS.QUEUE, item.id), { ...item });
       
-      // Update Campaign Stats (locally recalculate then sync)
-      const currentQueue = (await getDocs(collection(db, COLLECTIONS.QUEUE))).docs.map(d => d.data() as FilaEnvio);
+    // Update Campaign Stats (locally recalculate then sync)
+      const qSnap = await getDocs(query(collection(db, COLLECTIONS.QUEUE), where("campanhaId", "==", campaign.id)));
+      const currentQueue = qSnap.docs.map(d => d.data() as FilaEnvio);
       const updatedCampaign = campaigns.find(c => c.id === campaign.id);
+      
       if (updatedCampaign) {
-        updatedCampaign.totalEnviados = currentQueue.filter(q => q.campanhaId === campaign.id && q.status === 'enviado').length;
-        updatedCampaign.totalPendentes = currentQueue.filter(q => q.campanhaId === campaign.id && (q.status === 'pendente' || (q.status === 'erro' && q.tentativa < 3))).length;
-        updatedCampaign.totalErro = currentQueue.filter(q => q.campanhaId === campaign.id && q.status === 'erro' && q.tentativa >= 3).length;
+        updatedCampaign.totalEnviados = currentQueue.filter(q => q.status === 'enviado').length;
+        updatedCampaign.totalPendentes = currentQueue.filter(q => (q.status === 'pendente' || (q.status === 'erro' && q.tentativa < 3))).length;
+        updatedCampaign.totalErro = currentQueue.filter(q => q.status === 'erro' && q.tentativa >= 3).length;
         
         if (updatedCampaign.totalPendentes === 0) {
           updatedCampaign.status = 'concluída';
@@ -355,8 +382,10 @@ export const api = {
       }
 
       onProgress?.(`Enviado: ${processedCount}/${pendingItems.length}...`);
+      
+      // Delay de 2 segundos entre envios para evitar rate limit e spam filters
       if (processedCount < pendingItems.length) {
-        await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 1000));
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }
 
