@@ -210,28 +210,33 @@ export const api = {
 
   // Settings
   getSettings: async (): Promise<Settings> => {
-    const settingsRef = doc(db, COLLECTIONS.SETTINGS, 'global');
-    const snap = await getDoc(settingsRef);
-    
-    if (!snap.exists()) {
-      await setDoc(settingsRef, initialSettings);
+    try {
+      const settingsRef = doc(db, COLLECTIONS.SETTINGS, 'global');
+      const snap = await getDoc(settingsRef);
+      
+      if (!snap.exists()) {
+        await setDoc(settingsRef, initialSettings);
+        return initialSettings;
+      }
+      
+      const settings = snap.data() as Settings;
+      
+      // Garantir que campos novos existam e evitar erros de campos nulos
+      return {
+        ...initialSettings,
+        ...settings,
+        notificacoes: { ...initialSettings.notificacoes, ...(settings.notificacoes || {}) },
+        landingPage: { ...initialSettings.landingPage, ...(settings.landingPage || {}) },
+        empresa: { ...initialSettings.empresa, ...(settings.empresa || {}) },
+        whatsappWidget: { 
+          ...initialSettings.whatsappWidget, 
+          ...(settings.whatsappWidget || {}) 
+        } as any
+      };
+    } catch (error) {
+      console.error('Erro ao carregar configurações:', error);
       return initialSettings;
     }
-    
-    const settings = snap.data() as Settings;
-    
-    // Garantir que campos novos existam
-    return {
-      ...initialSettings,
-      ...settings,
-      notificacoes: { ...initialSettings.notificacoes, ...(settings.notificacoes || {}) },
-      landingPage: { ...initialSettings.landingPage, ...(settings.landingPage || {}) },
-      empresa: { ...initialSettings.empresa, ...(settings.empresa || {}) },
-      whatsappWidget: { 
-        ...initialSettings.whatsappWidget, 
-        ...(settings.whatsappWidget || {}) 
-      } as any
-    };
   },
 
   saveSettings: async (settings: Settings) => {
