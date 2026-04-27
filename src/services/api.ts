@@ -282,14 +282,13 @@ export const api = {
     if (!lead.email.includes('@')) return { success: false, message: 'E-mail inválido.' };
 
     try {
-      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      const response = await fetch('/api/brevo/send', {
         method: 'POST',
         headers: {
-          'accept': 'application/json',
-          'api-key': settings.brevoApiKey,
           'content-type': 'application/json'
         },
         body: JSON.stringify({
+          apiKey: settings.brevoApiKey,
           sender: { name: settings.remetenteNome, email: settings.remetenteEmail },
           to: [{ email: lead.email, name: lead.nome }],
           subject: campaign.assunto,
@@ -297,14 +296,10 @@ export const api = {
         })
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro desconhecido na API do Brevo');
-      }
-
-      return { success: true, message: 'Enviado com sucesso' };
+      const result = await response.json();
+      return { success: result.success, message: result.message };
     } catch (error: any) {
-      return { success: false, message: error.message || 'Falha na conexão com Brevo' };
+      return { success: false, message: error.message || 'Falha na conexão com o servidor de disparo' };
     }
   },
 
