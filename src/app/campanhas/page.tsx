@@ -75,129 +75,73 @@ export default function CampanhasPage() {
   const generateProfessionalHTML = async (text: string, subject: string, bannerImg?: string) => {
     const settings = await api.getSettings();
     const brandName = settings.landingPage?.titulo || 'Gerency Leads';
-    const brandColor = settings.landingPage?.formColor || '#3b82f6';
-    const logoUrl = settings.landingPage?.logoUrl;
+    const brandColor = settings.landingPage?.formColor || '#4f46e5';
     const websiteUrl = settings.empresa?.website.startsWith('http') ? settings.empresa.website : 'https://' + settings.empresa?.website;
-
-    // Helper para garantir URL absoluta nas imagens
-    const getAbsoluteUrl = (url: string) => {
-      if (!url) return '';
-      if (url.startsWith('http')) return url;
-      return `${websiteUrl}${url.startsWith('/') ? '' : '/'}${url}`;
-    };
+    
+    // Imagens padrão caso não existam
+    const logoUrl = settings.landingPage?.logoUrl;
+    const finalLogo = logoUrl ? (logoUrl.startsWith('http') ? logoUrl : `${websiteUrl}${logoUrl}`) : null;
 
     const paragraphs = text.split('\n').filter(p => p.trim() !== '');
-    const formattedBody = paragraphs.map(p => `
-      <p style="margin: 0 0 20px 0; color: #374151; font-family: 'Segoe UI', Arial, sans-serif; font-size: 16px; line-height: 1.6;">
-        ${p}
-      </p>`).join('');
+    const bodyContent = paragraphs.map(p => `
+      <tr><td style="padding-bottom:15px; font-family:Arial,sans-serif; font-size:16px; line-height:1.5; color:#374151;">${p}</td></tr>
+    `).join('');
 
-    const empresa = settings.empresa || {
-      website: 'www.visualsuper.com.br',
-      endereco: 'Rua Jeremias Eugênio da Silva, 74 - Serraria - São José, Santa Catarina, Brasil',
-      facebook: '#',
-      instagram: '#',
-      linkedin: '#',
-      youtube: '#'
-    };
+    const empresa = settings.empresa || { website: 'www.visualsuper.com.br', endereco: '' };
 
     return `
-      <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-      <html xmlns="http://www.w3.org/1999/xhtml">
-      <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <title>${subject}</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-      </head>
-      <body style="margin: 0; padding: 0; background-color: #f8fafc;">
-        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; padding: 40px 10px;">
+<div style="background-color:#f3f4f6; padding:20px; font-family:Arial,sans-serif;">
+  <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px; background-color:#ffffff; border-radius:8px; overflow:hidden; border-top: 6px solid ${brandColor};">
+    ${finalLogo ? `
+    <tr>
+      <td align="center" style="padding:30px 20px; background-color:#ffffff;">
+        <img src="${finalLogo}" alt="${brandName}" width="180" style="display:block; border:0;">
+      </td>
+    </tr>` : `<tr><td align="center" style="padding:20px; font-size:24px; font-weight:bold; color:${brandColor};">${brandName}</td></tr>`}
+    
+    ${bannerImg ? `
+    <tr>
+      <td align="center">
+        <img src="${bannerImg.startsWith('http') ? bannerImg : websiteUrl + bannerImg}" alt="Banner" width="600" style="width:100%; display:block; border:0;">
+      </td>
+    </tr>` : ''}
+
+    <tr>
+      <td style="padding:40px 30px;">
+        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+          ${bodyContent}
           <tr>
-            <td align="center">
-              <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-top: 5px solid ${brandColor}; border-collapse: collapse; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                <!-- Header -->
-                <tr>
-                  <td align="center" style="padding: 40px 20px; background-color: ${brandColor};">
-                    ${logoUrl 
-                      ? `<img src="${getAbsoluteUrl(logoUrl)}" alt="${brandName}" style="max-height: 70px; width: auto; display: block;" border="0">` 
-                      : `<h1 style="color: #ffffff; margin: 0; font-family: Arial, sans-serif; font-size: 28px;">${brandName}</h1>`
-                    }
-                  </td>
-                </tr>
-
-                <!-- Banner -->
-                ${bannerImg ? `
-                <tr>
-                  <td align="center">
-                    <img src="${getAbsoluteUrl(bannerImg)}" alt="Destaque" width="600" style="width: 100%; max-width: 600px; display: block;" border="0">
-                  </td>
-                </tr>` : ''}
-
-                <!-- Content -->
-                <tr>
-                  <td style="padding: 40px 50px; background-color: #ffffff;">
-                    ${formattedBody}
-                    
-                    <!-- Button -->
-                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                      <tr>
-                        <td align="center" style="padding: 30px 0;">
-                          <a href="${websiteUrl}" target="_blank" style="background-color: #4f46e5; color: #ffffff; padding: 18px 45px; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 16px; display: inline-block; font-family: Arial, sans-serif;">
-                            Clique para acessar todos os detalhes!
-                          </a>
-                        </td>
-                      </tr>
-                    </table>
-
-                    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;">
-                    <p style="font-family: Arial, sans-serif; font-weight: bold; color: #1e293b; font-size: 18px; margin: 0;">
-                      Conte com a <span style="color: #4f46e5;">${brandName}</span>! 💙
-                    </p>
-                  </td>
-                </tr>
-
-                <!-- Footer -->
-                <tr>
-                  <td align="center" style="padding: 40px 20px; background-color: #ffffff; border-top: 1px solid #e2e8f0;">
-                    <p style="margin: 0; text-transform: uppercase; letter-spacing: 1px; color: #475569; font-weight: 600; font-family: Arial, sans-serif; font-size: 12px;">Nossas Redes Sociais</p>
-                    
-                    <table border="0" cellpadding="0" cellspacing="0" style="margin: 25px 0;">
-                      <tr>
-                        <td style="padding: 0 8px;">
-                          <a href="${empresa.facebook}"><img src="https://img.icons8.com/fluent/48/000000/facebook-new.png" width="32" height="32" style="display: block;" border="0"></a>
-                        </td>
-                        <td style="padding: 0 8px;">
-                          <a href="${empresa.instagram}"><img src="https://img.icons8.com/fluent/48/000000/instagram-new.png" width="32" height="32" style="display: block;" border="0"></a>
-                        </td>
-                        <td style="padding: 0 8px;">
-                          <a href="${empresa.linkedin}"><img src="https://img.icons8.com/fluent/48/000000/linkedin.png" width="32" height="32" style="display: block;" border="0"></a>
-                        </td>
-                        <td style="padding: 0 8px;">
-                          <a href="${empresa.youtube}"><img src="https://img.icons8.com/fluent/48/000000/youtube-play.png" width="32" height="32" style="display: block;" border="0"></a>
-                        </td>
-                      </tr>
-                    </table>
-
-                    <p style="margin: 10px 0; font-family: Arial, sans-serif; font-size: 13px; color: #64748b;">
-                      Visualizar este e-mail como <a href="${websiteUrl}" style="color: #4f46e5; text-decoration: none;">página web</a>
-                    </p>
-                    <p style="margin: 20px 0 5px 0; font-family: Arial, sans-serif; font-size: 13px; color: #64748b;">
-                      Enviado por <a href="${websiteUrl}" style="color: #4f46e5; text-decoration: none; font-weight: bold;">${empresa.website}</a>
-                    </p>
-                    <p style="margin: 0; font-family: Arial, sans-serif; font-size: 12px; color: #94a3b8; line-height: 1.4;">
-                      ${empresa.endereco}
-                    </p>
-                    <p style="margin-top: 25px; font-family: Arial, sans-serif; font-size: 11px; color: #94a3b8;">
-                      Caso não queira mais receber estes e-mails, <a href="#" style="color: #64748b; text-decoration: underline;">cancele sua inscrição</a>.
-                    </p>
-                  </td>
-                </tr>
-              </table>
+            <td align="center" style="padding:30px 0;">
+              <a href="${websiteUrl}" style="background-color:${brandColor}; color:#ffffff; padding:15px 35px; text-decoration:none; border-radius:50px; font-weight:bold; display:inline-block;">Acesse os detalhes agora</a>
+            </td>
+          </tr>
+          <tr>
+            <td style="border-top:1px solid #e5e7eb; padding-top:20px; font-weight:bold; color:#111827;">
+              Conte com a ${brandName}! 💙
             </td>
           </tr>
         </table>
-      </body>
-      </html>
-    `;
+      </td>
+    </tr>
+
+    <tr>
+      <td align="center" style="padding:30px; background-color:#f9fafb; font-size:12px; color:#6b7280; line-height:1.5;">
+        <p style="margin-bottom:10px;"><strong>NOSSAS REDES SOCIAIS</strong></p>
+        <table border="0" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+          <tr>
+            <td style="padding:0 10px;"><a href="${empresa.facebook || '#'}"><img src="https://cdn-icons-png.flaticon.com/32/733/733547.png" width="24"></a></td>
+            <td style="padding:0 10px;"><a href="${empresa.instagram || '#'}"><img src="https://cdn-icons-png.flaticon.com/32/2111/2111463.png" width="24"></a></td>
+            <td style="padding:0 10px;"><a href="${empresa.linkedin || '#'}"><img src="https://cdn-icons-png.flaticon.com/32/145/145807.png" width="24"></a></td>
+          </tr>
+        </table>
+        <p>${empresa.endereco}</p>
+        <p style="margin-top:15px;">Enviado por <a href="${websiteUrl}" style="color:${brandColor}; text-decoration:none;">${empresa.website}</a></p>
+        <p style="font-size:10px; margin-top:20px;">Para parar de receber, <a href="#" style="color:#6b7280;">clique aqui</a>.</p>
+      </td>
+    </tr>
+  </table>
+</div>
+    `.trim();
   };
 
   const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
