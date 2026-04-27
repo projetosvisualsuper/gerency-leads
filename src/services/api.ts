@@ -1,5 +1,6 @@
 import { Lead, Campaign, FilaEnvio, Settings, LandingPageInstance, LandingPageSettings } from '@/types/crm';
 import { db } from '@/lib/firebase';
+import { testBrevoConnectionAction, sendEmailBrevoAction } from '@/app/actions/brevo';
 import { 
   collection, 
   getDocs, 
@@ -262,35 +263,27 @@ export const api = {
     return count;
   },
 
+  // Check Brevo Connection
+  checkBrevoConnection: async (apiKey: string) => {
+    return await testBrevoConnectionAction(apiKey);
+  },
+
   // Real Brevo Sending
   sendEmailBrevo: async (campaign: Campaign, lead: Lead, settings: Settings): Promise<{ success: boolean; message: string }> => {
     if (!lead.consentimentoLGPD) return { success: false, message: 'Lead sem consentimento LGPD.' };
     if (!lead.email.includes('@')) return { success: false, message: 'E-mail inválido.' };
 
     try {
-      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-        method: 'POST',
-        headers: {
-          'accept': 'application/json',
-          'api-key': settings.brevoApiKey,
-          'content-type': 'application/json'
-        },
-        body: JSON.stringify({
-          sender: { name: settings.remetenteNome, email: settings.remetenteEmail },
-          to: [{ email: lead.email, name: lead.nome }],
-          subject: campaign.assunto,
-          htmlContent: campaign.conteudoHtml.replace('{{nome}}', lead.nome)
-        })
+      const result = await sendEmailBrevoAction({
+        apiKey: settings.brevoApiKey,
+        sender: { name: settings.remetenteNome, email: settings.remetenteEmail },
+        to: [{ email: lead.email, name: lead.nome }],
+        subject: campaign.assunto,
+        htmlContent: campaign.conteudoHtml.replace('{{nome}}', lead.nome)
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro desconhecido na API do Brevo');
-      }
-
-      return { success: true, message: 'Enviado com sucesso' };
+      return { success: result.success, message: result.message };
     } catch (error: any) {
-      return { success: false, message: error.message || 'Falha na conexão com Brevo' };
+      return { success: false, message: 'Erro na ponte de disparo.' };
     }
   },
 

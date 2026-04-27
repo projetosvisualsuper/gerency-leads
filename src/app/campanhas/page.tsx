@@ -27,6 +27,8 @@ import {
 export default function CampanhasPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [isCreating, setIsCreating] = useState(false);
+  const [isProcessingQueue, setIsProcessingQueue] = useState(false);
+  const [processMessage, setProcessMessage] = useState('');
   const [viewMode, setViewMode] = useState<'normal' | 'html'>('normal');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isGeneratingIA, setIsGeneratingIA] = useState(false);
@@ -232,10 +234,14 @@ export default function CampanhasPage() {
     
     await api.saveCampaign(updatedCampaign);
     setCampaigns(await api.getCampaigns());
+    
+    // Iniciar processamento automaticamente
+    handleProcessQueue();
+    
     setAlertModal({
       isOpen: true,
-      title: 'Fila Gerada',
-      message: `Sucesso! Fila de envio gerada com ${queue.length} e-mails agendados.`
+      title: 'Disparo Iniciado',
+      message: `Sucesso! Fila de envio gerada com ${queue.length} e-mails. O processamento começou.`
     });
   };
 
@@ -254,6 +260,19 @@ export default function CampanhasPage() {
     setDeleteConfirm({ isOpen: false, campaignId: '', campaignNome: '' });
   };
 
+  const handleProcessQueue = async () => {
+    setIsProcessingQueue(true);
+    try {
+      await api.processQueue((msg) => setProcessMessage(msg));
+      setCampaigns(await api.getCampaigns());
+    } catch (error) {
+      alert('Erro ao processar fila');
+    } finally {
+      setIsProcessingQueue(false);
+      setProcessMessage('');
+    }
+  };
+
   return (
     <div>
       <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -261,9 +280,25 @@ export default function CampanhasPage() {
           <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>Campanhas de E-mail</h2>
           <p style={{ opacity: 0.6 }}>Crie e monitore seus envios em massa.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setIsCreating(true)}>
-          <Plus size={18} /> Nova Campanha
-        </button>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          {isProcessingQueue && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--success)', color: 'white', padding: '0.5rem 1rem', borderRadius: '50px', fontSize: '0.875rem' }}>
+              <div style={{ width: '14px', height: '14px', border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+              {processMessage || 'Processando...'}
+            </div>
+          )}
+          <button 
+            className="btn btn-outline" 
+            onClick={handleProcessQueue}
+            disabled={isProcessingQueue}
+            style={{ borderColor: 'var(--primary)', color: 'var(--primary)' }}
+          >
+            <Clock size={18} /> {isProcessingQueue ? 'Processando...' : 'Processar Fila'}
+          </button>
+          <button className="btn btn-primary" onClick={() => setIsCreating(true)}>
+            <Plus size={18} /> Nova Campanha
+          </button>
+        </div>
       </header>
 
       {isCreating && (

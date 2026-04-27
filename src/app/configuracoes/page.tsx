@@ -110,6 +110,21 @@ export default function ConfigPage() {
                   onChange={e => setSettings({...settings, brevoApiKey: e.target.value})}
                 />
               </div>
+              <div style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <button 
+                  className="btn btn-outline" 
+                  style={{ fontSize: '0.75rem', height: '32px', borderColor: 'var(--primary)', color: 'var(--primary)' }}
+                  onClick={async () => {
+                    const result = await api.checkBrevoConnection(settings.brevoApiKey);
+                    alert(result.message);
+                  }}
+                >
+                  Testar Conexão
+                </button>
+                <p style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                  Teste sua chave antes de salvar as alterações.
+                </p>
+              </div>
             </div>
             
             <div>
