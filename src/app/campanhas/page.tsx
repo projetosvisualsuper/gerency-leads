@@ -34,7 +34,6 @@ export default function CampanhasPage() {
   const [viewMode, setViewMode] = useState<'normal' | 'html'>('normal');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isGeneratingIA, setIsGeneratingIA] = useState(false);
-  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
   const [selectedCampaignHtml, setSelectedCampaignHtml] = useState<string | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string>('');
   
@@ -90,27 +89,45 @@ export default function CampanhasPage() {
     }
   }, [isPreviewOpen, selectedCampaignHtml, viewMode, newCampaign]);
 
+  const uploadToFirebaseWithTimeout = async (base64Str: string, path: string): Promise<string> => {
+    return new Promise(async (resolve) => {
+      const timeout = setTimeout(() => resolve(base64Str), 5000); // 5s timeout fallback
+      try {
+        const imageRef = ref(storage, path);
+        await uploadString(imageRef, base64Str, 'data_url');
+        const url = await getDownloadURL(imageRef);
+        clearTimeout(timeout);
+        resolve(url);
+      } catch (err) {
+        clearTimeout(timeout);
+        console.error('Firebase upload failed or denied:', err);
+        resolve(base64Str);
+      }
+    });
+  };
+
   const generateProfessionalHTML = async (text: string, subject: string, bannerImg?: string) => {
     const settings = await api.getSettings();
     const brandName = settings.landingPage?.titulo || 'Gerency Leads';
     const brandColor = settings.landingPage?.formColor || '#4f46e5';
     const websiteUrl = settings.empresa?.website.startsWith('http') ? settings.empresa.website : 'https://' + settings.empresa?.website;
     
-    // Process logo URL
     let logoUrl = settings.landingPage?.logoUrl;
     
-    // Se a logo for base64, fazemos o upload pro Firebase Storage silenciosamente para não quebrar no e-mail
+    // Tenta fazer upload da logo base64 pro Firebase para não quebrar no e-mail (com timeout de segurança)
     if (logoUrl && logoUrl.startsWith('data:image')) {
-      try {
-        const logoRef = ref(storage, `campanhas/logos/auto_logo_${Date.now()}`);
-        await uploadString(logoRef, logoUrl, 'data_url');
-        logoUrl = await getDownloadURL(logoRef);
-      } catch (err) {
-        console.error('Erro ao fazer upload da logo base64', err);
-      }
+      logoUrl = await uploadToFirebaseWithTimeout(logoUrl, `campanhas/logos/auto_logo_${Date.now()}`);
     }
     
-    const finalLogo = logoUrl ? (logoUrl.startsWith('http') ? logoUrl : `${websiteUrl}${logoUrl}`) : null;
+    const finalLogo = logoUrl ? (logoUrl.startsWith('http') || logoUrl.startsWith('data:') ? logoUrl : `${websiteUrl}${logoUrl}`) : null;
+    
+    // Tenta fazer upload do banner base64
+    let finalBanner = bannerImg;
+    if (finalBanner && finalBanner.startsWith('data:image')) {
+      finalBanner = await uploadToFirebaseWithTimeout(finalBanner, `campanhas/banners/auto_banner_${Date.now()}`);
+    } else if (finalBanner && !finalBanner.startsWith('http')) {
+      finalBanner = websiteUrl + finalBanner;
+    }
 
     const paragraphs = text.split('\n').filter(p => p.trim() !== '');
     const bodyContent = paragraphs.map(p => `
@@ -136,10 +153,10 @@ export default function CampanhasPage() {
       </td>
     </tr>` : `<tr><td align="center" style="padding:20px; font-size:24px; font-weight:bold; color:${brandColor};">${brandName}</td></tr>`}
     
-    ${bannerImg ? `
+    ${finalBanner ? `
     <tr>
       <td align="center">
-        <img src="${bannerImg}" alt="Banner" width="600" style="width:100%; display:block; border:0; max-width: 100%;">
+        <img src="${finalBanner}" alt="Banner" width="600" style="width:100%; display:block; border:0; max-width: 100%;">
       </td>
     </tr>` : ''}
 
@@ -183,7 +200,7 @@ export default function CampanhasPage() {
     `.trim();
   };
 
-  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -192,18 +209,11 @@ export default function CampanhasPage() {
       return;
     }
 
-    setIsUploadingBanner(true);
-    try {
-      const storageRef = ref(storage, `campanhas/banners/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(storageRef);
-      setNewCampaign(prev => ({ ...prev, bannerImg: downloadURL }));
-    } catch (error) {
-      console.error('Erro no upload da imagem:', error);
-      alert('Falha ao enviar a imagem para o servidor.');
-    } finally {
-      setIsUploadingBanner(false);
-    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setNewCampaign(prev => ({ ...prev, bannerImg: reader.result as string }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleGenerateIA = () => {
@@ -398,9 +408,8 @@ export default function CampanhasPage() {
                     className="btn btn-outline" 
                     style={{ flex: 1, height: '42px', display: 'flex', gap: '0.5rem', justifyContent: 'center', background: newCampaign.bannerImg ? 'rgba(16, 185, 129, 0.1)' : 'transparent' }}
                     onClick={() => document.getElementById('banner-upload')?.click()}
-                    disabled={isUploadingBanner}
                   >
-                    <Plus size={16} /> {isUploadingBanner ? 'Enviando...' : newCampaign.bannerImg ? 'Trocar Imagem' : 'Escolher Banner'}
+                    <Plus size={16} /> {newCampaign.bannerImg ? 'Trocar Imagem' : 'Escolher Banner'}
                   </button>
                   {newCampaign.bannerImg && (
                     <div style={{ width: '42px', height: '42px', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border)' }}>
