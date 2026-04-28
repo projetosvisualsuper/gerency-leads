@@ -1,6 +1,6 @@
-import { Metadata } from 'next';
 import { api } from '@/services/api';
 import UnifiedClientPage from './UnifiedClientPage';
+import { headers } from 'next/headers';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -26,20 +26,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // Se não for LP, tentar Bio Link
   const bio = await api.getBioLinkBySlug(slug);
   if (bio) {
+    const headerList = await headers();
+    const host = headerList.get('host');
+    const protocol = host?.includes('localhost') ? 'http' : 'https';
+    const imageUrl = bio.avatarUrl?.startsWith('data:image') 
+      ? `${protocol}://${host}/api/bio-image/${bio.id}`
+      : (bio.avatarUrl || '/images/minimalist-bg.png');
+
     return {
       title: `${bio.profileName} | Bio Link`,
       description: bio.bio || 'Confira meus links e redes sociais.',
       openGraph: {
         title: bio.profileName,
         description: bio.bio || 'Confira meus links e redes sociais.',
-        images: [bio.avatarUrl || '/images/minimalist-bg.png'],
+        images: [imageUrl],
         type: 'website',
       },
       twitter: {
         card: 'summary_large_image',
         title: bio.profileName,
         description: bio.bio,
-        images: [bio.avatarUrl || '/images/minimalist-bg.png'],
+        images: [imageUrl],
       }
     };
   }
