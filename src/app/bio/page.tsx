@@ -206,7 +206,7 @@ export default function BioLinksPage() {
               ctx.fillStyle = 'white';
               ctx.fillRect(0, 0, size, size);
             }
-            const scale = (size * 0.75) / Math.max(img.width, img.height);
+            const scale = (size * 0.9) / Math.max(img.width, img.height);
             const dw = img.width * scale;
             const dh = img.height * scale;
             const dx = (size - dw) / 2;
