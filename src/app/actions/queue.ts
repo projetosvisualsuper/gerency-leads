@@ -92,7 +92,7 @@ export async function processQueueServerAction() {
     queueSnapshot.forEach(doc => {
       const data = doc.data() as FilaEnvio;
       if (data.status === 'pendente' || (data.status === 'erro' && data.tentativa < 3)) {
-        pendingItems.push({ id: doc.id, ...data });
+        pendingItems.push({ ...data, id: doc.id });
       }
     });
 
