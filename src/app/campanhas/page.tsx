@@ -33,6 +33,7 @@ export default function CampanhasPage() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isGeneratingIA, setIsGeneratingIA] = useState(false);
   const [selectedCampaignHtml, setSelectedCampaignHtml] = useState<string | null>(null);
+  const [previewHtml, setPreviewHtml] = useState<string>('');
   
   // Custom Delete Confirm State
   const [deleteConfirm, setDeleteConfirm] = useState<{
@@ -72,6 +73,20 @@ export default function CampanhasPage() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    if (isPreviewOpen && !selectedCampaignHtml) {
+      if (viewMode === 'html' && newCampaign.conteudoHtml) {
+        setPreviewHtml(newCampaign.conteudoHtml);
+      } else {
+        generateProfessionalHTML(
+          newCampaign.textoSimples || 'Digite seu texto para visualizar...', 
+          newCampaign.assunto || 'Assunto Exemplo', 
+          newCampaign.bannerImg
+        ).then(setPreviewHtml);
+      }
+    }
+  }, [isPreviewOpen, selectedCampaignHtml, viewMode, newCampaign]);
+
   const generateProfessionalHTML = async (text: string, subject: string, bannerImg?: string) => {
     const settings = await api.getSettings();
     const brandName = settings.landingPage?.titulo || 'Gerency Leads';
@@ -80,7 +95,7 @@ export default function CampanhasPage() {
     
     // Imagens padrão caso não existam
     const logoUrl = settings.landingPage?.logoUrl;
-    const finalLogo = logoUrl ? (logoUrl.startsWith('http') ? logoUrl : `${websiteUrl}${logoUrl}`) : null;
+    const finalLogo = logoUrl ? (logoUrl.startsWith('http') || logoUrl.startsWith('data:') ? logoUrl : `${websiteUrl}${logoUrl}`) : null;
 
     const paragraphs = text.split('\n').filter(p => p.trim() !== '');
     const bodyContent = paragraphs.map(p => `
@@ -89,20 +104,27 @@ export default function CampanhasPage() {
 
     const empresa = settings.empresa || { website: 'www.visualsuper.com.br', endereco: '' };
 
-    return `
-<div style="background-color:#f3f4f6; padding:20px; font-family:Arial,sans-serif;">
-  <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px; background-color:#ffffff; border-radius:8px; overflow:hidden; border-top: 6px solid ${brandColor};">
+    return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${subject}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: Arial, sans-serif;">
+<div style="background-color:#f3f4f6; padding:20px; font-family:Arial,sans-serif; width:100%;">
+  <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px; background-color:#ffffff; border-radius:8px; overflow:hidden; border-top: 6px solid ${brandColor}; margin: 0 auto;">
     ${finalLogo ? `
     <tr>
       <td align="center" style="padding:30px 20px; background-color:#ffffff;">
-        <img src="${finalLogo}" alt="${brandName}" width="180" style="display:block; border:0;">
+        <img src="${finalLogo}" alt="${brandName}" width="180" style="display:block; border:0; max-width: 100%;">
       </td>
     </tr>` : `<tr><td align="center" style="padding:20px; font-size:24px; font-weight:bold; color:${brandColor};">${brandName}</td></tr>`}
     
     ${bannerImg ? `
     <tr>
       <td align="center">
-        <img src="${bannerImg.startsWith('http') ? bannerImg : websiteUrl + bannerImg}" alt="Banner" width="600" style="width:100%; display:block; border:0;">
+        <img src="${bannerImg.startsWith('http') || bannerImg.startsWith('data:') ? bannerImg : websiteUrl + bannerImg}" alt="Banner" width="600" style="width:100%; display:block; border:0; max-width: 100%;">
       </td>
     </tr>` : ''}
 
@@ -127,20 +149,22 @@ export default function CampanhasPage() {
     <tr>
       <td align="center" style="padding:30px; background-color:#f9fafb; font-size:12px; color:#6b7280; line-height:1.5;">
         <p style="margin-bottom:10px;"><strong>NOSSAS REDES SOCIAIS</strong></p>
-        <table border="0" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+        <table border="0" cellpadding="0" cellspacing="0" style="margin-bottom:20px;" align="center">
           <tr>
-            <td style="padding:0 10px;"><a href="${empresa.facebook || '#'}"><img src="https://cdn-icons-png.flaticon.com/32/733/733547.png" width="24"></a></td>
-            <td style="padding:0 10px;"><a href="${empresa.instagram || '#'}"><img src="https://cdn-icons-png.flaticon.com/32/2111/2111463.png" width="24"></a></td>
-            <td style="padding:0 10px;"><a href="${empresa.linkedin || '#'}"><img src="https://cdn-icons-png.flaticon.com/32/145/145807.png" width="24"></a></td>
+            <td style="padding:0 10px;"><a href="${empresa.facebook || '#'}"><img src="https://cdn-icons-png.flaticon.com/32/733/733547.png" width="24" alt="Facebook"></a></td>
+            <td style="padding:0 10px;"><a href="${empresa.instagram || '#'}"><img src="https://cdn-icons-png.flaticon.com/32/2111/2111463.png" width="24" alt="Instagram"></a></td>
+            <td style="padding:0 10px;"><a href="${empresa.linkedin || '#'}"><img src="https://cdn-icons-png.flaticon.com/32/145/145807.png" width="24" alt="LinkedIn"></a></td>
           </tr>
         </table>
-        <p>${empresa.endereco}</p>
-        <p style="margin-top:15px;">Enviado por <a href="${websiteUrl}" style="color:${brandColor}; text-decoration:none;">${empresa.website}</a></p>
-        <p style="font-size:10px; margin-top:20px;">Para parar de receber, <a href="#" style="color:#6b7280;">clique aqui</a>.</p>
+        <p style="margin: 0;">${empresa.endereco}</p>
+        <p style="margin-top:15px; margin-bottom: 0;">Enviado por <a href="${websiteUrl}" style="color:${brandColor}; text-decoration:none;">${empresa.website}</a></p>
+        <p style="font-size:10px; margin-top:20px; margin-bottom: 0;">Para parar de receber, <a href="#" style="color:#6b7280;">clique aqui</a>.</p>
       </td>
     </tr>
   </table>
 </div>
+</body>
+</html>
     `.trim();
   };
 
@@ -559,9 +583,7 @@ export default function CampanhasPage() {
                 dangerouslySetInnerHTML={{ 
                   __html: selectedCampaignHtml 
                     ? selectedCampaignHtml 
-                    : (viewMode === 'html' && newCampaign.conteudoHtml 
-                        ? newCampaign.conteudoHtml 
-                        : generateProfessionalHTML(newCampaign.textoSimples || 'Digite seu texto para visualizar...', newCampaign.assunto || 'Assunto Exemplo', newCampaign.bannerImg)) 
+                    : previewHtml || '<div style="text-align:center; padding: 20px;">Carregando visualização...</div>'
                 }}
               />
             </div>

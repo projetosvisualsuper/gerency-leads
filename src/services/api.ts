@@ -306,7 +306,7 @@ export const api = {
         sender: { name: settings.remetenteNome, email: settings.remetenteEmail },
         to: [{ email: lead.email, name: lead.nome }],
         subject: campaign.assunto,
-        htmlContent: campaign.conteudoHtml.replace('{{nome}}', lead.nome)
+        htmlContent: campaign.conteudoHtml.replace(/\{\{nome\}\}/g, lead.nome)
       });
 
       if (result.success) {
