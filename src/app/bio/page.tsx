@@ -93,8 +93,21 @@ export default function BioLinksPage() {
 
       bioToSave.items = await Promise.all(bioToSave.items.map(async item => {
         if (item.imageUrl?.startsWith('data:image')) {
-          return { ...item, imageUrl: await compressImage(item.imageUrl, 700, 'image/jpeg') };
+          // Detectar se é PNG para manter transparência
+          const format = item.imageUrl.includes('image/png') ? 'image/png' : 'image/jpeg';
+          item = { ...item, imageUrl: await compressImage(item.imageUrl, 700, format) };
         }
+        
+        if (item.type === 'carousel' && item.carouselImages) {
+          item.carouselImages = await Promise.all(item.carouselImages.map(async img => {
+            if (img.startsWith('data:image')) {
+              const format = img.includes('image/png') ? 'image/png' : 'image/jpeg';
+              return await compressImage(img, 700, format);
+            }
+            return img;
+          }));
+        }
+        
         return item;
       }));
 
@@ -122,15 +135,16 @@ export default function BioLinksPage() {
     }
   };
 
-  const addItem = (type: 'link' | 'product' | 'header' | 'video' | 'image') => {
+  const addItem = (type: 'link' | 'product' | 'header' | 'video' | 'image' | 'carousel') => {
     if (!currentBio) return;
     const newItem: BioItem = {
       id: Math.random().toString(36).substr(2, 9),
       type,
-      title: type === 'header' ? 'Título da Seção' : (type === 'link' || type === 'product' ? 'Novo Link' : ''),
+      title: type === 'header' ? 'Título da Seção' : (type === 'link' || type === 'product' ? 'Novo Link' : (type === 'carousel' ? 'Galeria de Produtos' : '')),
       url: '',
       isActive: true,
-      price: type === 'product' ? 'R$ 0,00' : undefined
+      price: type === 'product' ? 'R$ 0,00' : undefined,
+      carouselImages: type === 'carousel' ? [] : undefined
     };
     setCurrentBio({
       ...currentBio,
@@ -173,6 +187,7 @@ export default function BioLinksPage() {
       linkedin: "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.454C23.208 24 24 23.227 24 22.271V1.729C24 .774 23.208 0 22.225 0z",
       twitter: "M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z",
       shopee: "M12 0L2.1 4.5v15L12 24l9.9-4.5v-15L12 0zm0 2.2l7.7 3.5v12.6L12 21.8 4.3 18.3V5.7l7.7-3.5z", // Simples placeholder Shopee
+      threads: "M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.057 7.164 1.43 1.783 3.631 2.698 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.31-.71-.873-1.3-1.634-1.75-.192 1.352-.622 2.446-1.284 3.272-.886 1.102-2.14 1.704-3.73 1.79-1.202.065-2.361-.218-3.259-.801-1.063-.689-1.685-1.74-1.752-2.964-.065-1.19.408-2.285 1.33-3.082.88-.76 2.119-1.207 3.583-1.291a13.853 13.853 0 0 1 3.02.142c-.126-.742-.375-1.332-.75-1.757-.513-.586-1.308-.883-2.359-.89h-.029c-.844 0-1.992.232-2.721 1.32L7.734 7.847c.98-1.454 2.568-2.256 4.478-2.256h.044c3.194.02 5.097 1.975 5.287 5.388.108.046.216.094.321.142 1.49.7 2.58 1.761 3.154 3.07.797 1.82.871 4.79-1.548 7.158-1.85 1.81-4.094 2.628-7.277 2.65Zm1.003-11.69c-.242 0-.487.007-.739.021-1.836.103-2.98.946-2.916 2.143.067 1.256 1.452 1.839 2.784 1.767 1.224-.065 2.818-.543 3.086-3.71a10.5 10.5 0 0 0-2.215-.221z",
       pinterest: "M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.965 1.406-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.259 7.929-7.259 4.162 0 7.398 2.966 7.398 6.931 0 4.135-2.607 7.462-6.223 7.462-1.215 0-2.358-.63-2.75-1.378l-.748 2.853c-.271 1.031-1.002 2.324-1.492 3.121 1.12.332 2.299.512 3.527.512 6.621 0 11.988-5.367 11.988-11.987S18.638 0 12.017 0z"
     };
 
@@ -196,13 +211,16 @@ export default function BioLinksPage() {
       img.onload = () => {
         const canvas = document.createElement('canvas');
         
+        // Se a imagem original for PNG e não pedirmos especificamente JPEG, mantemos PNG para transparência
+        const finalFormat = (base64.includes('image/png') && format === 'image/jpeg') ? 'image/png' : format;
+
         if (addPadding) {
           const size = maxWidth;
           canvas.width = size;
           canvas.height = size;
           const ctx = canvas.getContext('2d');
           if (ctx) {
-            if (format !== 'image/png') {
+            if (finalFormat !== 'image/png') {
               ctx.fillStyle = 'white';
               ctx.fillRect(0, 0, size, size);
             }
@@ -213,7 +231,7 @@ export default function BioLinksPage() {
             const dy = (size - dh) / 2;
             ctx.drawImage(img, dx, dy, dw, dh);
           }
-          resolve(canvas.toDataURL(format, 0.8));
+          resolve(canvas.toDataURL(finalFormat, 0.8));
           return;
         }
 
@@ -229,7 +247,7 @@ export default function BioLinksPage() {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL(format, 0.8));
+        resolve(canvas.toDataURL(finalFormat, 0.8));
       };
     });
   };
@@ -267,6 +285,92 @@ export default function BioLinksPage() {
       updateItem(id, { imageUrl: compressed });
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleCarouselImageUpload = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    const item = currentBio?.items.find(i => i.id === id);
+    if (!item) return;
+
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        // Detectar se é PNG
+        const format = (reader.result as string).includes('image/png') ? 'image/png' : 'image/jpeg';
+        const compressed = await compressImage(reader.result as string, 700, format);
+        
+        // Precisamos pegar o estado mais atual para evitar problemas com múltiplos uploads simultâneos
+        setCurrentBio(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            items: prev.items.map(i => {
+              if (i.id === id) {
+                return { ...i, carouselImages: [...(i.carouselImages || []), compressed] };
+              }
+              return i;
+            })
+          };
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeCarouselImage = (id: string, index: number) => {
+    const item = currentBio?.items.find(i => i.id === id);
+    if (!item || !item.carouselImages) return;
+    const newImages = [...item.carouselImages];
+    newImages.splice(index, 1);
+    updateItem(id, { carouselImages: newImages });
+  };
+
+  const AutoCarousel = ({ images }: { images: string[] }) => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    useEffect(() => {
+      if (!images || images.length <= 1) return;
+      const interval = setInterval(() => {
+        setCurrentIndex((prev) => (prev + 1) % images.length);
+      }, 3000);
+      return () => clearInterval(interval);
+    }, [images]);
+
+    if (!images || images.length === 0) return null;
+
+    return (
+      <div style={{ position: 'relative', width: '100%', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+        <div style={{ 
+          display: 'flex', 
+          transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)', 
+          transform: `translateX(-${currentIndex * 100}%)`,
+        }}>
+          {images.map((img, idx) => (
+            <div key={idx} style={{ width: '100%', flexShrink: 0, aspectRatio: '1/1' }}>
+              <img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Carousel" />
+            </div>
+          ))}
+        </div>
+        {images.length > 1 && (
+          <div style={{ position: 'absolute', bottom: '10px', left: '0', right: '0', display: 'flex', justifyContent: 'center', gap: '4px' }}>
+            {images.map((_, idx) => (
+              <div 
+                key={idx} 
+                style={{ 
+                  width: idx === currentIndex ? '12px' : '4px', 
+                  height: '4px', 
+                  borderRadius: '2px', 
+                  background: idx === currentIndex ? 'white' : 'rgba(255,255,255,0.4)',
+                  transition: 'all 0.3s ease'
+                }} 
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   const moveItem = (id: string, direction: 'up' | 'down') => {
@@ -445,6 +549,7 @@ export default function BioLinksPage() {
               <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
                 <button className="btn btn-outline" style={{ flex: 1, minWidth: '120px' }} onClick={() => addItem('link')}>+ Link</button>
                 <button className="btn btn-outline" style={{ flex: 1, minWidth: '120px' }} onClick={() => addItem('product')}>+ Produto</button>
+                <button className="btn btn-outline" style={{ flex: 1, minWidth: '120px' }} onClick={() => addItem('carousel')}>+ Carrossel</button>
                 <button className="btn btn-outline" style={{ flex: 1, minWidth: '120px' }} onClick={() => addItem('video')}>+ Vídeo</button>
                 <button className="btn btn-outline" style={{ flex: 1, minWidth: '120px' }} onClick={() => addItem('image')}>+ Banner</button>
                 <button className="btn btn-outline" style={{ flex: 1, minWidth: '120px' }} onClick={() => addItem('header')}>+ Divisor</button>
@@ -511,6 +616,47 @@ export default function BioLinksPage() {
                           />
                           <button className="btn btn-outline" style={{ height: '32px', fontSize: '12px' }} onClick={() => document.getElementById(`banner-img-${item.id}`)?.click()}>Escolher Imagem</button>
                         </div>
+                      </div>
+                    )}
+
+                    {item.type === 'carousel' && (
+                      <div style={{ display: 'grid', gap: '1rem' }}>
+                        <input 
+                          type="text" 
+                          placeholder="Título do Carrossel (Opcional)" 
+                          className="btn-outline" 
+                          style={{ width: '100%', height: '36px', padding: '0 0.5rem' }}
+                          value={item.title}
+                          onChange={e => updateItem(item.id, { title: e.target.value })}
+                        />
+                        <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+                          <div 
+                            style={{ width: '80px', height: '80px', flexShrink: 0, background: '#f1f5f9', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '2px dashed var(--border)' }}
+                            onClick={() => document.getElementById(`carousel-upload-${item.id}`)?.click()}
+                          >
+                            <Plus size={24} style={{ opacity: 0.3 }} />
+                          </div>
+                          {item.carouselImages?.map((img, idx) => (
+                            <div key={idx} style={{ width: '80px', height: '80px', flexShrink: 0, position: 'relative', borderRadius: '8px', overflow: 'hidden' }}>
+                              <img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <button 
+                                onClick={() => removeCarouselImage(item.id, idx)}
+                                style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(239, 68, 68, 0.8)', color: 'white', border: 'none', borderRadius: '50%', width: '18px', height: '18px', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              >
+                                <X size={10} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        <input 
+                          type="file" 
+                          id={`carousel-upload-${item.id}`} 
+                          multiple 
+                          accept="image/*" 
+                          hidden 
+                          onChange={(e) => handleCarouselImageUpload(item.id, e)} 
+                        />
+                        <p style={{ fontSize: '0.7rem', opacity: 0.5, margin: 0 }}>Dica: Você pode selecionar várias imagens de uma vez.</p>
                       </div>
                     )}
 
@@ -843,7 +989,7 @@ export default function BioLinksPage() {
             fontFamily: 'Inter, sans-serif'
           }}>
             <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-              <div style={{ width: '90px', height: '90px', borderRadius: '50%', background: 'white', margin: '0 auto 1rem', overflow: 'hidden', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
+              <div style={{ width: '110px', height: '110px', borderRadius: '50%', background: 'white', margin: '0 auto 1rem', overflow: 'hidden', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
                 {currentBio.avatarUrl && <img src={currentBio.avatarUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
               </div>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>{currentBio.profileName}</h2>
@@ -858,16 +1004,16 @@ export default function BioLinksPage() {
                     style={{ 
                       background: (item.type === 'product') ? currentBio.theme.cardBackground : (item.buttonColor || currentBio.theme.buttonBackground),
                       backdropFilter: currentBio.theme.style === 'glass' ? 'blur(10px)' : 'none',
-                      color: (item.type === 'product' || item.type === 'image' || item.type === 'video') ? currentBio.theme.textColor : (item.buttonTextColor || currentBio.theme.buttonTextColor),
-                      padding: (item.type === 'image' || item.type === 'video') ? '8px' : (item.type === 'product' ? '1rem' : '0.875rem'),
+                      color: (item.type === 'product' || item.type === 'image' || item.type === 'video' || item.type === 'carousel') ? currentBio.theme.textColor : (item.buttonTextColor || currentBio.theme.buttonTextColor),
+                      padding: (item.type === 'image' || item.type === 'video' || item.type === 'carousel') ? '8px' : (item.type === 'product' ? '1rem' : '0.875rem'),
                       borderRadius: '16px',
                       fontSize: '0.9rem',
                       fontWeight: 600,
                       border: (item.type === 'image' || item.type === 'video') ? `3px solid ${currentBio.theme.buttonBackground}` : (currentBio.theme.style === 'glass' ? '1px solid rgba(255,255,255,0.2)' : 'none'),
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: item.type === 'product' ? 'flex-start' : 'center',
-                      textAlign: 'center',
+                      justifyContent: (item.type === 'product' || item.type === 'carousel') ? 'flex-start' : 'center',
+                      textAlign: (item.type === 'product' || item.type === 'carousel') ? 'left' : 'center',
                       overflow: 'hidden',
                       boxShadow: '0 4px 12px -2px rgba(0,0,0,0.12)'
                     }}
@@ -931,13 +1077,20 @@ export default function BioLinksPage() {
                       </div>
                     )}
 
+                    {item.type === 'carousel' && (
+                      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                        {item.title && <div style={{ fontSize: '0.8rem', fontWeight: 700, color: currentBio.theme.cardTextColor || currentBio.theme.textColor, textAlign: 'center', opacity: 0.8 }}>{item.title}</div>}
+                        <AutoCarousel images={item.carouselImages || []} />
+                      </div>
+                    )}
+
                     {item.type === 'header' && (
                       <div style={{ width: '100%', padding: '1rem 0 0.5rem', textAlign: 'center', fontSize: '0.9rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.7 }}>
                         {item.title}
                       </div>
                     )}
 
-                    {!(item.type === 'product' || item.type === 'video' || item.type === 'image' || item.type === 'header') && (
+                    {!(item.type === 'product' || item.type === 'video' || item.type === 'image' || item.type === 'header' || item.type === 'carousel') && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', justifyContent: 'center' }}>
                         {item.icon === 'shopping-cart' && <ShoppingCart size={18} />}
                         {item.icon === 'smartphone' && <Smartphone size={18} />}

@@ -145,7 +145,7 @@ export interface BioSocial {
 
 export interface BioItem {
   id: string;
-  type: 'link' | 'product' | 'header' | 'video' | 'image';
+  type: 'link' | 'product' | 'header' | 'video' | 'image' | 'carousel';
   title: string;
   subtitle?: string;
   url: string;
@@ -153,6 +153,7 @@ export interface BioItem {
   icon?: string;
   buttonText?: string;
   imageUrl?: string;
+  carouselImages?: string[];
   price?: string;
   isActive: boolean;
   buttonColor?: string;
