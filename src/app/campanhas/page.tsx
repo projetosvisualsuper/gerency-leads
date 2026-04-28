@@ -102,7 +102,7 @@ export default function CampanhasPage() {
     let finalLogo = null;
     if (logoUrl) {
       if (logoUrl.startsWith('data:image')) {
-        finalLogo = `${systemUrl}/api/img/logo`; // Endpoint dinâmico no CRM
+        finalLogo = campaignId ? `${systemUrl}/api/img/logo` : logoUrl; // Endpoint dinâmico no CRM ou base64 na prévia
       } else if (!logoUrl.startsWith('http')) {
         finalLogo = systemUrl + (logoUrl.startsWith('/') ? '' : '/') + logoUrl;
       } else {
