@@ -49,11 +49,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       openGraph: {
         title: bio.profileName,
         description: bio.bio || 'Confira meus links e redes sociais.',
-        images: [imageUrl],
+        images: [
+          {
+            url: imageUrl,
+            width: 400,
+            height: 400,
+            alt: bio.profileName,
+          }
+        ],
         type: 'website',
       },
       twitter: {
-        card: 'summary_large_image',
+        card: 'summary',
         title: bio.profileName,
         description: bio.bio,
         images: [imageUrl],

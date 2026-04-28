@@ -83,7 +83,8 @@ export default function BioLinksPage() {
       const bioToSave = { ...currentBio };
       
       if (bioToSave.avatarUrl?.startsWith('data:image')) {
-        bioToSave.avatarUrl = await compressImage(bioToSave.avatarUrl, 300);
+        const format = bioToSave.avatarUrl.includes('image/png') ? 'image/png' : 'image/jpeg';
+        bioToSave.avatarUrl = await compressImage(bioToSave.avatarUrl, 400, format);
       }
       
       if (bioToSave.footerLogoUrl?.startsWith('data:image')) {
