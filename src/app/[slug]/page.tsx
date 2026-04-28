@@ -28,11 +28,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const bio = await api.getBioLinkBySlug(slug);
   if (bio) {
     const headerList = await headers();
-    const host = headerList.get('host');
-    const protocol = host?.includes('localhost') ? 'http' : 'https';
-    const imageUrl = bio.avatarUrl?.startsWith('data:image') 
-      ? `${protocol}://${host}/api/bio-image/${bio.id}`
-      : (bio.avatarUrl || '/images/minimalist-bg.png');
+    const host = headerList.get('host') || 'gerency-leads.vercel.app';
+    const protocol = headerList.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
+    
+    let imageUrl = '';
+    if (bio.avatarUrl?.startsWith('data:image')) {
+      imageUrl = `${protocol}://${host}/api/bio-image/${bio.id}`;
+    } else {
+      imageUrl = bio.avatarUrl || `${protocol}://${host}/images/minimalist-bg.png`;
+    }
+
+    // Garantir que a URL seja absoluta para o WhatsApp
+    if (imageUrl.startsWith('/')) {
+      imageUrl = `${protocol}://${host}${imageUrl}`;
+    }
 
     return {
       title: `${bio.profileName} | Bio Link`,
