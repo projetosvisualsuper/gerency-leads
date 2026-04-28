@@ -93,14 +93,18 @@ export default function CampanhasPage() {
     const brandColor = settings.landingPage?.formColor || '#4f46e5';
     const websiteUrl = settings.empresa?.website.startsWith('http') ? settings.empresa.website : 'https://' + settings.empresa?.website;
     
+    // O websiteUrl é o site público da empresa (ex: visualsuper.com.br). 
+    // Mas a API de imagens roda NO CRM. Então precisamos da URL de onde o CRM está rodando.
+    const systemUrl = typeof window !== 'undefined' ? window.location.origin : websiteUrl;
+    
     let logoUrl = settings.landingPage?.logoUrl;
     
     let finalLogo = null;
     if (logoUrl) {
       if (logoUrl.startsWith('data:image')) {
-        finalLogo = `${websiteUrl}/api/img/logo`; // Endpoint dinâmico
+        finalLogo = `${systemUrl}/api/img/logo`; // Endpoint dinâmico no CRM
       } else if (!logoUrl.startsWith('http')) {
-        finalLogo = websiteUrl + logoUrl;
+        finalLogo = systemUrl + (logoUrl.startsWith('/') ? '' : '/') + logoUrl;
       } else {
         finalLogo = logoUrl;
       }
@@ -110,9 +114,9 @@ export default function CampanhasPage() {
     if (bannerImg) {
       if (bannerImg.startsWith('data:image')) {
         // Se temos um ID de campanha (salvamento), usamos a API. Se não (preview), mantemos base64 para aparecer na hora.
-        finalBanner = campaignId ? `${websiteUrl}/api/img/banner/${campaignId}` : bannerImg;
+        finalBanner = campaignId ? `${systemUrl}/api/img/banner/${campaignId}` : bannerImg;
       } else if (!bannerImg.startsWith('http')) {
-        finalBanner = websiteUrl + bannerImg;
+        finalBanner = systemUrl + (bannerImg.startsWith('/') ? '' : '/') + bannerImg;
       } else {
         finalBanner = bannerImg;
       }
