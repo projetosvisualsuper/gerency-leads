@@ -26,6 +26,8 @@ export interface Campaign {
   conteudoHtml: string;
   dataCriacao: string;
   dataAgendada?: string;
+  botaoTexto?: string;
+  botaoLink?: string;
   status: CampaignStatus;
   totalLeads: number;
   totalEnviados: number;

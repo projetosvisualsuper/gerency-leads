@@ -81,15 +81,19 @@ export default function CampanhasPage() {
         generateProfessionalHTML(
           newCampaign.textoSimples || 'Digite seu texto para visualizar...', 
           newCampaign.assunto || 'Assunto Exemplo', 
-          newCampaign.bannerImg
+          newCampaign.bannerImg,
+          undefined,
+          newCampaign.botaoTexto,
+          newCampaign.botaoLink
         ).then(setPreviewHtml);
       }
     }
   }, [isPreviewOpen, selectedCampaignHtml, viewMode, newCampaign]);
 
-  const generateProfessionalHTML = async (text: string, subject: string, bannerImg?: string, campaignId?: string) => {
+  const generateProfessionalHTML = async (text: string, subject: string, bannerImg?: string, campaignId?: string, botaoTexto?: string, botaoLink?: string) => {
     const settings = await api.getSettings();
     const brandName = settings.landingPage?.titulo || 'Gerency Leads';
+    const senderName = settings.remetenteNome || brandName;
     const brandColor = settings.landingPage?.formColor || '#4f46e5';
     const websiteUrl = settings.empresa?.website.startsWith('http') ? settings.empresa.website : 'https://' + settings.empresa?.website;
     
@@ -160,12 +164,12 @@ export default function CampanhasPage() {
           ${bodyContent}
           <tr>
             <td align="center" style="padding:30px 0;">
-              <a href="${websiteUrl}" style="background-color:${brandColor}; color:#ffffff; padding:15px 35px; text-decoration:none; border-radius:50px; font-weight:bold; display:inline-block;">Acesse os detalhes agora</a>
+              <a href="${botaoLink || websiteUrl}" style="background-color:${brandColor}; color:#ffffff; padding:15px 35px; text-decoration:none; border-radius:50px; font-weight:bold; display:inline-block;">${botaoTexto || 'Acesse os detalhes agora'}</a>
             </td>
           </tr>
           <tr>
             <td style="border-top:1px solid #e5e7eb; padding-top:20px; font-weight:bold; color:#111827;">
-              Conte com a ${brandName}! 💙
+              Conte com a ${senderName}! 💙
             </td>
           </tr>
         </table>
@@ -241,10 +245,10 @@ export default function CampanhasPage() {
     // Se o HTML estiver vazio mas o texto não, gera um automático antes de salvar
     let finalHtml = newCampaign.conteudoHtml;
     if (!finalHtml && newCampaign.textoSimples) {
-      finalHtml = await generateProfessionalHTML(newCampaign.textoSimples, newCampaign.assunto, newCampaign.bannerImg, newCampaignId);
+      finalHtml = await generateProfessionalHTML(newCampaign.textoSimples, newCampaign.assunto, newCampaign.bannerImg, newCampaignId, newCampaign.botaoTexto, newCampaign.botaoLink);
     } else if (finalHtml && newCampaign.bannerImg && newCampaign.bannerImg.startsWith('data:image')) {
       // Se o usuário clicou em "Transformar em HTML" antes, o HTML tem o base64 chumbado. Precisamos regenerar com a URL da API.
-      finalHtml = await generateProfessionalHTML(newCampaign.textoSimples, newCampaign.assunto, newCampaign.bannerImg, newCampaignId);
+      finalHtml = await generateProfessionalHTML(newCampaign.textoSimples, newCampaign.assunto, newCampaign.bannerImg, newCampaignId, newCampaign.botaoTexto, newCampaign.botaoLink);
     }
 
     const campaign: Campaign = {
@@ -416,6 +420,31 @@ export default function CampanhasPage() {
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '0.75rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Texto do Botão (CTA)</label>
+                <input 
+                  type="text" 
+                  className="btn-outline" 
+                  style={{ width: '100%', height: '42px', padding: '0 1rem' }} 
+                  placeholder="Ex: Acesse os detalhes agora"
+                  value={newCampaign.botaoTexto || ''}
+                  onChange={e => setNewCampaign({...newCampaign, botaoTexto: e.target.value})}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Link do Botão (URL)</label>
+                <input 
+                  type="url" 
+                  className="btn-outline" 
+                  style={{ width: '100%', height: '42px', padding: '0 1rem' }} 
+                  placeholder="https://suaempresa.com.br/oferta"
+                  value={newCampaign.botaoLink || ''}
+                  onChange={e => setNewCampaign({...newCampaign, botaoLink: e.target.value})}
+                />
               </div>
             </div>
 
