@@ -1,3 +1,4 @@
+import { Metadata } from 'next';
 import { api } from '@/services/api';
 import UnifiedClientPage from './UnifiedClientPage';
 import { headers } from 'next/headers';
