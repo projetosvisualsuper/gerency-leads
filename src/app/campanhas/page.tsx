@@ -270,7 +270,7 @@ export default function CampanhasPage() {
     await api.saveCampaign(campaign);
     setCampaigns(await api.getCampaigns());
     setIsCreating(false);
-    setNewCampaign({ nome: '', assunto: '', conteudoHtml: '', textoSimples: '', bannerImg: '' });
+    setNewCampaign({ nome: '', assunto: '', conteudoHtml: '', textoSimples: '', bannerImg: '', botaoTexto: '', botaoLink: '' });
   };
 
   const startCampaign = async (campaign: Campaign) => {
