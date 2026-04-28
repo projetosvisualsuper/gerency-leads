@@ -70,6 +70,25 @@ export default function ConfigPage() {
     setTimeout(() => setSaved(false), 3000);
   };
 
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert("A imagem é muito grande! Por favor, use uma de até 2MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setSettings(prev => ({ 
+        ...prev, 
+        landingPage: { ...prev.landingPage, logoUrl: reader.result as string }
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const toggleNotification = (key: keyof Settings['notificacoes']) => {
     setSettings({
       ...settings,
@@ -145,10 +164,38 @@ export default function ConfigPage() {
         <section className="card">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
             <MapPin className="color-primary" size={20} />
-            <h3 style={{ fontSize: '1.25rem' }}>Informações da Empresa (Rodapé)</h3>
+            <h3 style={{ fontSize: '1.25rem' }}>Informações da Empresa (E-mail e Rodapé)</h3>
           </div>
           
           <div style={{ display: 'grid', gap: '1.25rem' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>
+                Logotipo da Empresa (Aparecerá no Topo dos E-mails)
+              </label>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  style={{ fontSize: '0.875rem' }}
+                />
+                {settings.landingPage?.logoUrl && settings.landingPage.logoUrl !== 'none' && (
+                  <button 
+                    className="btn btn-outline"
+                    style={{ fontSize: '0.75rem', height: '32px', color: 'var(--danger)', borderColor: 'var(--danger)' }}
+                    onClick={() => setSettings(prev => ({ ...prev, landingPage: { ...prev.landingPage, logoUrl: '' } }))}
+                  >
+                    Remover Logo
+                  </button>
+                )}
+              </div>
+              {settings.landingPage?.logoUrl && settings.landingPage.logoUrl.startsWith('data:image') && (
+                <div style={{ marginTop: '0.5rem' }}>
+                  <img src={settings.landingPage.logoUrl} alt="Logo" style={{ maxHeight: '40px', objectFit: 'contain' }} />
+                </div>
+              )}
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>Nome do Remetente</label>
