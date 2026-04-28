@@ -7,6 +7,15 @@ import { CheckCircle2, ChevronRight, Check, Calendar, MessageCircle, X, User, Sm
 import { useSearchParams } from 'next/navigation';
 
 // --- HELPERS ---
+const DEFAULT_BGS = {
+  'professional': '/images/sales-bg.png',
+  'lead-magnet': '/images/catalog-bg.png',
+  'minimalist': '/images/minimalist-bg.png',
+  'vsl': '/images/vsl-bg.png',
+  'event': 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&q=80',
+  'coupon': '/images/coupon-bg.png'
+};
+
 const getEmbedUrl = (url: string) => {
   if (!url) return '';
   if (url.includes('youtube.com') || url.includes('youtu.be')) {
