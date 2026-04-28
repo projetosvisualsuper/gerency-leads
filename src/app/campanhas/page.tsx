@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/services/api';
 import { Campaign, Lead } from '@/types/crm';
+import { ref, uploadBytes, getDownloadURL, uploadString } from 'firebase/storage';
+import { storage } from '@/lib/firebase';
 import { 
   Plus, 
   Send, 
@@ -32,6 +34,7 @@ export default function CampanhasPage() {
   const [viewMode, setViewMode] = useState<'normal' | 'html'>('normal');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isGeneratingIA, setIsGeneratingIA] = useState(false);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
   const [selectedCampaignHtml, setSelectedCampaignHtml] = useState<string | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string>('');
   
@@ -93,9 +96,21 @@ export default function CampanhasPage() {
     const brandColor = settings.landingPage?.formColor || '#4f46e5';
     const websiteUrl = settings.empresa?.website.startsWith('http') ? settings.empresa.website : 'https://' + settings.empresa?.website;
     
-    // Imagens padrão caso não existam
-    const logoUrl = settings.landingPage?.logoUrl;
-    const finalLogo = logoUrl ? (logoUrl.startsWith('http') || logoUrl.startsWith('data:') ? logoUrl : `${websiteUrl}${logoUrl}`) : null;
+    // Process logo URL
+    let logoUrl = settings.landingPage?.logoUrl;
+    
+    // Se a logo for base64, fazemos o upload pro Firebase Storage silenciosamente para não quebrar no e-mail
+    if (logoUrl && logoUrl.startsWith('data:image')) {
+      try {
+        const logoRef = ref(storage, `campanhas/logos/auto_logo_${Date.now()}`);
+        await uploadString(logoRef, logoUrl, 'data_url');
+        logoUrl = await getDownloadURL(logoRef);
+      } catch (err) {
+        console.error('Erro ao fazer upload da logo base64', err);
+      }
+    }
+    
+    const finalLogo = logoUrl ? (logoUrl.startsWith('http') ? logoUrl : `${websiteUrl}${logoUrl}`) : null;
 
     const paragraphs = text.split('\n').filter(p => p.trim() !== '');
     const bodyContent = paragraphs.map(p => `
@@ -124,7 +139,7 @@ export default function CampanhasPage() {
     ${bannerImg ? `
     <tr>
       <td align="center">
-        <img src="${bannerImg.startsWith('http') || bannerImg.startsWith('data:') ? bannerImg : websiteUrl + bannerImg}" alt="Banner" width="600" style="width:100%; display:block; border:0; max-width: 100%;">
+        <img src="${bannerImg}" alt="Banner" width="600" style="width:100%; display:block; border:0; max-width: 100%;">
       </td>
     </tr>` : ''}
 
@@ -168,7 +183,7 @@ export default function CampanhasPage() {
     `.trim();
   };
 
-  const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -177,11 +192,18 @@ export default function CampanhasPage() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setNewCampaign(prev => ({ ...prev, bannerImg: reader.result as string }));
-    };
-    reader.readAsDataURL(file);
+    setIsUploadingBanner(true);
+    try {
+      const storageRef = ref(storage, `campanhas/banners/${Date.now()}_${file.name}`);
+      await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(storageRef);
+      setNewCampaign(prev => ({ ...prev, bannerImg: downloadURL }));
+    } catch (error) {
+      console.error('Erro no upload da imagem:', error);
+      alert('Falha ao enviar a imagem para o servidor.');
+    } finally {
+      setIsUploadingBanner(false);
+    }
   };
 
   const handleGenerateIA = () => {
@@ -376,8 +398,9 @@ export default function CampanhasPage() {
                     className="btn btn-outline" 
                     style={{ flex: 1, height: '42px', display: 'flex', gap: '0.5rem', justifyContent: 'center', background: newCampaign.bannerImg ? 'rgba(16, 185, 129, 0.1)' : 'transparent' }}
                     onClick={() => document.getElementById('banner-upload')?.click()}
+                    disabled={isUploadingBanner}
                   >
-                    <Plus size={16} /> {newCampaign.bannerImg ? 'Trocar Imagem' : 'Escolher Banner'}
+                    <Plus size={16} /> {isUploadingBanner ? 'Enviando...' : newCampaign.bannerImg ? 'Trocar Imagem' : 'Escolher Banner'}
                   </button>
                   {newCampaign.bannerImg && (
                     <div style={{ width: '42px', height: '42px', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border)' }}>
