@@ -11,9 +11,10 @@ import {
   Tag as TagIcon,
   UserPlus,
   X,
-  Check,
   Eye,
-  Info
+  Info,
+  Download,
+  Upload
 } from 'lucide-react';
 
 export default function LeadsPage() {
@@ -23,6 +24,8 @@ export default function LeadsPage() {
   
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importStatus, setImportStatus] = useState('');
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [viewingLead, setViewingLead] = useState<Lead | null>(null);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
@@ -48,7 +51,10 @@ export default function LeadsPage() {
     origem: 'Manual',
     status: 'novo' as LeadStatus,
     tags: '',
-    observacoes: ''
+    observacoes: '',
+    empresa: '',
+    cidade: '',
+    estado: ''
   });
 
   const refreshLeads = async () => {
@@ -71,7 +77,10 @@ export default function LeadsPage() {
       status: formData.status,
       tags: formData.tags.split(',').map(t => t.trim()).filter(t => t),
       consentimentoLGPD: true,
-      observacoes: formData.observacoes
+      observacoes: formData.observacoes,
+      empresa: formData.empresa,
+      cidade: formData.cidade,
+      estado: formData.estado
     };
     
     await api.saveLead(lead);
@@ -89,7 +98,10 @@ export default function LeadsPage() {
         origem: lead.origem,
         status: lead.status,
         tags: lead.tags.join(', '),
-        observacoes: lead.observacoes || ''
+        observacoes: lead.observacoes || '',
+        empresa: lead.empresa || '',
+        cidade: lead.cidade || '',
+        estado: lead.estado || ''
       });
     } else {
       setEditingLead(null);
@@ -100,7 +112,10 @@ export default function LeadsPage() {
         origem: 'Manual',
         status: 'novo',
         tags: '',
-        observacoes: ''
+        observacoes: '',
+        empresa: '',
+        cidade: '',
+        estado: ''
       });
     }
     setIsModalOpen(true);
@@ -151,6 +166,99 @@ export default function LeadsPage() {
     await refreshLeads();
   };
 
+  const handleExportLeads = () => {
+    if (leads.length === 0) return;
+    
+    // Header do CSV
+    const headers = ['id', 'nome', 'email', 'telefone', 'empresa', 'cidade', 'estado', 'origem', 'dataCriacao', 'status', 'tags', 'observacoes'];
+    
+    // Instrução para o Excel reconhecer o separador ponto-e-vírgula automaticamente
+    let csvContent = 'sep=;\n';
+    csvContent += headers.join(';') + '\n';
+    
+    // Linhas do CSV
+    csvContent += leads.map(lead => [
+      lead.id,
+      `"${lead.nome}"`,
+      lead.email,
+      `"${lead.telefone || ''}"`,
+      `"${lead.empresa || ''}"`,
+      `"${lead.cidade || ''}"`,
+      `"${lead.estado || ''}"`,
+      `"${lead.origem}"`,
+      lead.dataCriacao,
+      lead.status,
+      `"${lead.tags.join(', ')}"`,
+      `"${(lead.observacoes || '').replace(/"/g, '""').replace(/\n/g, ' ')}"`
+    ].join(';')).join('\n');
+
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `backup_leads_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImportStatus('Processando arquivo...');
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split('\n');
+      let count = 0;
+      
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (i === 0 || !line.trim()) continue;
+        
+        // Suporte a vírgula ou ponto-e-vírgula (comum em CSVs brasileiros)
+        const separator = line.includes(';') ? ';' : ',';
+        const parts = line.split(separator).map(p => p.replace(/"/g, '').trim());
+        
+        if (parts.length < 2) continue;
+
+        const email = parts[0]; // Coluna A
+        const nome = parts[1];  // Coluna B
+        const telefone = parts[2] || parts[3] || ''; // Coluna C (Telefone) ou D (Celular)
+        const empresa = parts[5] || ''; // Coluna F
+        const estado = parts[7] || '';  // Coluna H
+        const cidade = parts[8] || '';  // Coluna I
+        
+        if (email && email.includes('@')) {
+          await api.saveLead({
+            id: Math.random().toString(36).substr(2, 9),
+            nome: nome || 'Importado',
+            email: email,
+            telefone: telefone,
+            empresa: empresa,
+            cidade: cidade,
+            estado: estado,
+            origem: 'Planilha RD/Massa',
+            dataCriacao: new Date().toISOString(),
+            status: 'novo',
+            tags: ['importado-planilha'],
+            consentimentoLGPD: true
+          });
+          count++;
+        }
+      }
+      
+      setImportStatus(`${count} leads importados com sucesso!`);
+      setTimeout(() => {
+        setIsImportModalOpen(false);
+        setImportStatus('');
+        refreshLeads();
+      }, 2000);
+    };
+    reader.readAsText(file);
+  };
+
   const filteredLeads = leads.filter(lead => 
     lead.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     lead.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -177,9 +285,17 @@ export default function LeadsPage() {
           <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>Gerenciamento de Leads</h2>
           <p style={{ opacity: 0.6 }}>Total de {leads.length} leads cadastrados.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => openModal()}>
-          <UserPlus size={18} /> Novo Lead
-        </button>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button className="btn btn-outline" onClick={handleExportLeads}>
+            <Download size={18} /> Exportar Backup
+          </button>
+          <button className="btn btn-outline" onClick={() => setIsImportModalOpen(true)}>
+            <Upload size={18} /> Importar Planilha
+          </button>
+          <button className="btn btn-primary" onClick={() => openModal()}>
+            <UserPlus size={18} /> Novo Lead
+          </button>
+        </div>
       </header>
 
       <div className="card" style={{ marginBottom: '1.5rem', padding: '1rem' }}>
@@ -405,6 +521,29 @@ export default function LeadsPage() {
                 </div>
               </div>
               <div>
+                <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>Empresa</label>
+                <input 
+                  type="text" className="btn-outline" style={{ width: '100%', height: '40px', padding: '0 0.75rem' }} 
+                  value={formData.empresa} onChange={e => setFormData({...formData, empresa: e.target.value})}
+                />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>Cidade</label>
+                  <input 
+                    type="text" className="btn-outline" style={{ width: '100%', height: '40px', padding: '0 0.75rem' }} 
+                    value={formData.cidade} onChange={e => setFormData({...formData, cidade: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>Estado (UF)</label>
+                  <input 
+                    type="text" className="btn-outline" style={{ width: '100%', height: '40px', padding: '0 0.75rem' }} 
+                    value={formData.estado} onChange={e => setFormData({...formData, estado: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div>
                 <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>Tags (separadas por vírgula)</label>
                 <input 
                   type="text" className="btn-outline" style={{ width: '100%', height: '40px', padding: '0 0.75rem' }} 
@@ -453,6 +592,31 @@ export default function LeadsPage() {
               >
                 Cancelar
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {isImportModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div className="card" style={{ width: '400px', position: 'relative' }}>
+            <button style={{ position: 'absolute', right: '1rem', top: '1rem', opacity: 0.5 }} onClick={() => setIsImportModalOpen(false)}>
+              <X size={20} />
+            </button>
+            <h3 style={{ marginBottom: '1.5rem' }}>Importar Leads em Massa</h3>
+            <p style={{ fontSize: '0.875rem', opacity: 0.6, marginBottom: '1.5rem' }}>
+              O arquivo deve ser um <strong>.CSV</strong> contendo as colunas: <strong>nome, email, telefone</strong> na primeira linha.
+            </p>
+            
+            <div style={{ border: '2px dashed var(--border)', borderRadius: 'var(--radius)', padding: '2rem', textAlign: 'center', cursor: 'pointer' }} onClick={() => document.getElementById('bulk-csv-file')?.click()}>
+              <Upload size={32} style={{ color: 'var(--primary)', marginBottom: '1rem' }} />
+              <p>{importStatus || 'Clique para selecionar arquivo .csv'}</p>
+              <input 
+                id="bulk-csv-file" 
+                type="file" 
+                accept=".csv" 
+                hidden 
+                onChange={handleImportCSV}
+              />
             </div>
           </div>
         </div>

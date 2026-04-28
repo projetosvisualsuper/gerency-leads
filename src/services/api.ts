@@ -1,6 +1,7 @@
-import { Lead, Campaign, FilaEnvio, Settings, LandingPageInstance, LandingPageSettings } from '@/types/crm';
+import { Lead, Campaign, FilaEnvio, Settings, LandingPageInstance, LandingPageSettings, BioLink } from '@/types/crm';
 import { db } from '@/lib/firebase';
 import { sendEmailBrevoAction } from '@/app/actions/brevo';
+import { processQueueServerAction } from '@/app/actions/queue';
 import { 
   collection, 
   getDocs, 
@@ -13,7 +14,8 @@ import {
   where,
   setDoc,
   orderBy,
-  limit as firestoreLimit
+  limit as firestoreLimit,
+  increment
 } from 'firebase/firestore';
 
 const COLLECTIONS = {
@@ -21,7 +23,8 @@ const COLLECTIONS = {
   CAMPAIGNS: 'campaigns',
   QUEUE: 'queue',
   SETTINGS: 'settings',
-  LANDING_PAGES: 'landing_pages'
+  LANDING_PAGES: 'landing_pages',
+  BIO_LINKS: 'bio_links'
 };
 
 const initialSettings: Settings = {
@@ -247,6 +250,40 @@ export const api = {
   },
 
   // Daily Stats Tracking
+  // Bio Links
+  getBioLinks: async (): Promise<BioLink[]> => {
+    const querySnapshot = await getDocs(collection(db, COLLECTIONS.BIO_LINKS));
+    const bios: BioLink[] = [];
+    querySnapshot.forEach((doc) => {
+      bios.push({ id: doc.id, ...doc.data() } as BioLink);
+    });
+    return bios.sort((a, b) => new Date(b.dataCriacao).getTime() - new Date(a.dataCriacao).getTime());
+  },
+
+  getBioLinkBySlug: async (slug: string): Promise<BioLink | null> => {
+    const q = query(collection(db, COLLECTIONS.BIO_LINKS), where("slug", "==", slug));
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+    return { id: snap.docs[0].id, ...snap.docs[0].data() } as BioLink;
+  },
+
+  saveBioLink: async (bio: BioLink) => {
+    // Sanitizar objeto para remover valores 'undefined' que o Firestore não suporta
+    const sanitizedBio = JSON.parse(JSON.stringify(bio));
+    const bioRef = doc(db, COLLECTIONS.BIO_LINKS, bio.id);
+    const snap = await getDoc(bioRef);
+    if (snap.exists()) {
+      await updateDoc(bioRef, sanitizedBio);
+    } else {
+      await setDoc(bioRef, sanitizedBio);
+    }
+    return bio;
+  },
+
+  deleteBioLink: async (id: string) => {
+    await deleteDoc(doc(db, COLLECTIONS.BIO_LINKS, id));
+  },
+
   getSentTodayCount: async (): Promise<number> => {
     const today = new Date().toISOString().split('T')[0];
     const q = query(
@@ -266,83 +303,31 @@ export const api = {
 
   // Brevo Actions handled directly in components to avoid build conflicts
 
-  // Queue Processing Engine
+  // Queue Processing Engine (Refatorado para usar Server Action)
   processQueue: async (onProgress?: (msg: string) => void) => {
-    const settings = await api.getSettings();
-    const campaigns = await api.getCampaigns();
-    const leads = await api.getLeads();
-    const sentToday = await api.getSentTodayCount();
+    onProgress?.('Iniciando processamento seguro no servidor...');
     
-    const remainingLimit = settings.limiteDiario - sentToday;
-    if (remainingLimit <= 0) {
-      onProgress?.(`Limite diário de ${settings.limiteDiario} atingido.`);
-      return;
+    const result = await processQueueServerAction();
+    
+    if (result.success) {
+      onProgress?.(result.message || 'Processamento concluído.');
+    } else {
+      onProgress?.(`Erro: ${result.message}`);
+      throw new Error(result.message);
     }
+  },
 
-    const queueSnapshot = await getDocs(collection(db, COLLECTIONS.QUEUE));
-    const allQueue: FilaEnvio[] = [];
-    queueSnapshot.forEach(doc => allQueue.push({ id: doc.id, ...doc.data() } as FilaEnvio));
+  incrementBioView: async (id: string) => {
+    const bioRef = doc(db, COLLECTIONS.BIO_LINKS, id);
+    await updateDoc(bioRef, {
+      visualizacoes: increment(1)
+    });
+  },
 
-    const pendingItems = allQueue.filter(q => 
-      (q.status === 'pendente' || q.status === 'erro') && q.tentativa < 3
-    ).slice(0, remainingLimit);
-
-    if (pendingItems.length === 0) {
-      onProgress?.('Nenhum e-mail pendente na fila.');
-      return;
-    }
-
-    onProgress?.(`Processando ${pendingItems.length} e-mails...`);
-    let processedCount = 0;
-
-    for (const item of pendingItems) {
-      const campaign = campaigns.find(c => c.id === item.campanhaId);
-      const lead = leads.find(l => l.id === item.leadId);
-
-      if (!campaign || !lead) continue;
-
-      item.tentativa += 1;
-      const result = await sendEmailBrevoAction({
-        apiKey: settings.brevoApiKey,
-        sender: { name: settings.remetenteNome, email: settings.remetenteEmail },
-        to: [{ email: lead.email, name: lead.nome }],
-        subject: campaign.assunto,
-        htmlContent: campaign.conteudoHtml.replace(/\{\{nome\}\}/g, lead.nome)
-      });
-
-      if (result.success) {
-        item.status = 'enviado';
-        item.dataEnvio = new Date().toISOString();
-        item.erroMensagem = null;
-        processedCount++;
-      } else {
-        item.status = 'erro';
-        item.erroMensagem = result.message;
-      }
-
-      // Update Firestore item
-      await updateDoc(doc(db, COLLECTIONS.QUEUE, item.id), { ...item });
-      
-      // Update Campaign Stats (locally recalculate then sync)
-      const currentQueue = (await getDocs(collection(db, COLLECTIONS.QUEUE))).docs.map(d => d.data() as FilaEnvio);
-      const updatedCampaign = campaigns.find(c => c.id === campaign.id);
-      if (updatedCampaign) {
-        updatedCampaign.totalEnviados = currentQueue.filter(q => q.campanhaId === campaign.id && q.status === 'enviado').length;
-        updatedCampaign.totalPendentes = currentQueue.filter(q => q.campanhaId === campaign.id && (q.status === 'pendente' || (q.status === 'erro' && q.tentativa < 3))).length;
-        updatedCampaign.totalErro = currentQueue.filter(q => q.campanhaId === campaign.id && q.status === 'erro' && q.tentativa >= 3).length;
-        
-        if (updatedCampaign.totalPendentes === 0) {
-          updatedCampaign.status = 'concluída';
-        }
-        await updateDoc(doc(db, COLLECTIONS.CAMPAIGNS, campaign.id), { ...updatedCampaign });
-      }
-
-      onProgress?.(`Enviado: ${processedCount}/${pendingItems.length}...`);
-      if (processedCount < pendingItems.length) {
-        await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 1000));
-      }
-    }
-
-    onProgress?.(`Processamento concluído. ${processedCount} enviados.`);
+  incrementBioClick: async (id: string) => {
+    const bioRef = doc(db, COLLECTIONS.BIO_LINKS, id);
+    await updateDoc(bioRef, {
+      cliquesTotais: increment(1)
+    });
   }
 };

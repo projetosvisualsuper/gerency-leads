@@ -65,3 +65,36 @@ export async function sendEmailBrevoAction(params: {
     return { success: false, message: 'Falha crítica no servidor de disparo.' };
   }
 }
+
+export async function getBrevoCreditsAction(apiKey: string) {
+  if (!apiKey) return 0;
+
+  try {
+    const response = await fetch('https://api.brevo.com/v3/account', {
+      method: 'GET',
+      headers: {
+        'accept': 'application/json',
+        'api-key': apiKey
+      },
+      cache: 'no-store'
+    });
+
+    if (!response.ok) return 0;
+
+    const data = await response.json();
+    
+    // 1. Tenta encontrar créditos diários (Plano Gratuito)
+    const dailyPlan = data.plan?.find((p: any) => p.creditsType === 'daily');
+    if (dailyPlan) return dailyPlan.credits;
+
+    // 2. Tenta encontrar créditos de assinatura (Planos Pagos)
+    const subscriptionPlan = data.plan?.find((p: any) => p.type === 'subscription');
+    if (subscriptionPlan) return subscriptionPlan.credits;
+
+    // 3. Fallback para qualquer outro plano que tenha créditos
+    const anyPlanWithCredits = data.plan?.find((p: any) => p.credits !== undefined);
+    return anyPlanWithCredits?.credits || 0;
+  } catch (error) {
+    return 0;
+  }
+}

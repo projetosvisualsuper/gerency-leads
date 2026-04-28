@@ -17,12 +17,15 @@ export interface Lead {
   utm_source?: string;
   utm_medium?: string;
   utm_campaign?: string;
+  cidade?: string;
+  estado?: string;
 }
 
 export interface Campaign {
   id: string;
   nome: string;
   assunto: string;
+  preheader?: string;
   conteudoHtml: string;
   dataCriacao: string;
   dataAgendada?: string;
@@ -131,4 +134,58 @@ export interface Settings {
     youtube: string;
   };
   whatsappWidget?: WhatsappWidgetConfig;
+}
+
+// --- LINK NA BIO ---
+
+export interface BioSocial {
+  platform: 'instagram' | 'facebook' | 'tiktok' | 'youtube' | 'whatsapp' | 'linkedin' | 'twitter' | 'github' | 'threads' | 'shopee' | 'pinterest';
+  url: string;
+}
+
+export interface BioItem {
+  id: string;
+  type: 'link' | 'product' | 'header' | 'video' | 'image';
+  title: string;
+  subtitle?: string;
+  url: string;
+  videoUrl?: string;
+  icon?: string;
+  buttonText?: string;
+  imageUrl?: string;
+  price?: string;
+  isActive: boolean;
+  buttonColor?: string;
+  buttonTextColor?: string;
+}
+
+export interface BioTheme {
+  background: string;
+  backgroundType?: 'solid' | 'gradient';
+  backgroundGradient?: string;
+  gradientColor1?: string;
+  gradientColor2?: string;
+  textColor: string;
+  cardTextColor: string;
+  socialIconColor: string;
+  buttonBackground: string;
+  buttonTextColor: string;
+  cardBackground: string;
+  fontFamily: string;
+  style: 'glass' | 'flat' | 'gradient' | 'minimal';
+}
+
+export interface BioLink {
+  id: string;
+  slug: string;
+  profileName: string;
+  bio: string;
+  avatarUrl: string;
+  footerLogoUrl?: string;
+  socials: BioSocial[];
+  items: BioItem[];
+  theme: BioTheme;
+  dataCriacao: string;
+  cliquesTotais: number;
+  visualizacoes?: number; // Contador de visualizações do perfil
 }

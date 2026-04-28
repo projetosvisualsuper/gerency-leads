@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/services/api';
 import { Lead, Campaign, FilaEnvio } from '@/types/crm';
 import { useRouter } from 'next/navigation';
+import { getBrevoCreditsAction } from '@/app/actions/brevo';
 import { 
   Users, 
   Mail, 
@@ -93,13 +94,16 @@ export default function Dashboard() {
       const today = new Date().toISOString().split('T')[0];
       const leadsHoje = leads.filter(l => l.dataCriacao.startsWith(today)).length;
 
+      // Busca créditos reais do Brevo
+      const realCredits = await getBrevoCreditsAction(settings.brevoApiKey);
+
       setStats({
         totalLeads: leads.length,
         leadsHoje: leadsHoje,
         totalCampaigns: campaigns.length,
         enviadosHoje: sentToday,
         pendentes: queue.filter(q => q.status === 'pendente' || (q.status === 'erro' && q.tentativa < 3)).length,
-        limiteRestante: settings.limiteDiario - sentToday
+        limiteRestante: realCredits
       });
 
       setRecentLeads(leads.slice(0, 5));

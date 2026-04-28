@@ -57,15 +57,21 @@ export default function CampanhasPage() {
     message: ''
   });
 
+  // Modal de Relatório
+  const [reportModal, setReportModal] = useState<Campaign | null>(null);
+
   // Form State
   const [newCampaign, setNewCampaign] = useState({
     nome: '',
     assunto: '',
+    preheader: '',
     conteudoHtml: '',
     textoSimples: '',
     bannerImg: '',
     botaoTexto: '',
-    botaoLink: ''
+    botaoLink: '',
+    tipoEnvio: 'imediato' as 'imediato' | 'agendado',
+    dataAgendada: ''
   });
 
   useEffect(() => {
@@ -92,7 +98,7 @@ export default function CampanhasPage() {
     }
   }, [isPreviewOpen, selectedCampaignHtml, viewMode, newCampaign]);
 
-  const generateProfessionalHTML = async (text: string, subject: string, bannerImg?: string, campaignId?: string, botaoTexto?: string, botaoLink?: string) => {
+  const generateProfessionalHTML = async (text: string, subject: string, bannerImg?: string, campaignId?: string, botaoTexto?: string, botaoLink?: string, preheader?: string) => {
     const settings = await api.getSettings();
     const brandName = settings.landingPage?.titulo || 'Gerency Leads';
     const senderName = settings.remetenteNome || brandName;
@@ -135,6 +141,11 @@ export default function CampanhasPage() {
 
     const empresa = settings.empresa || { website: 'www.visualsuper.com.br', endereco: '' };
     const headerColor = settings.landingPage?.headerColor || '#ffffff';
+    
+    // Configurar o link de rastreamento se for uma campanha salva (tem ID)
+    const finalBotaoLink = campaignId 
+      ? `${systemUrl}/api/track?type=click&campaignId=${campaignId}&url=${encodeURIComponent(botaoLink || websiteUrl)}`
+      : (botaoLink || websiteUrl);
 
     return `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -159,6 +170,7 @@ export default function CampanhasPage() {
 </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: Arial, sans-serif;">
+${preheader ? `<div style="display: none; max-height: 0px; overflow: hidden; font-size: 1px; line-height: 1px; color: #f3f4f6; opacity: 0;">${preheader}</div>` : ''}
 <div class="wrapper" style="background-color:#f3f4f6; padding:20px; font-family:Arial,sans-serif; width:100%; box-sizing: border-box;">
   <table class="container" align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px; background-color:#ffffff; border-radius:8px; overflow:hidden; border-top: 6px solid ${brandColor}; margin: 0 auto;">
     ${finalLogo ? `
@@ -181,7 +193,7 @@ export default function CampanhasPage() {
           ${bodyContent}
           <tr>
             <td align="center" style="padding:30px 0;">
-              <a href="${botaoLink || websiteUrl}" class="responsive-btn" style="background-color:${brandColor}; color:#ffffff; padding:15px 35px; text-decoration:none; border-radius:50px; font-weight:bold; display:inline-block;">${botaoTexto || 'Acesse os detalhes agora'}</a>
+              <a href="${finalBotaoLink}" class="responsive-btn" style="background-color:${brandColor}; color:#ffffff; padding:15px 35px; text-decoration:none; border-radius:50px; font-weight:bold; display:inline-block;">${botaoTexto || 'Acesse os detalhes agora'}</a>
             </td>
           </tr>
           <tr>
@@ -210,6 +222,7 @@ export default function CampanhasPage() {
     </tr>
   </table>
 </div>
+${campaignId ? `<img src="${systemUrl}/api/track?type=open&campaignId=${campaignId}" width="1" height="1" alt="" style="display:none;" />` : ''}
 </body>
 </html>
     `.trim();
@@ -251,7 +264,7 @@ export default function CampanhasPage() {
   };
 
   const handleConvertToHTML = async () => {
-    const html = await generateProfessionalHTML(newCampaign.textoSimples, newCampaign.assunto, newCampaign.bannerImg);
+    const html = await generateProfessionalHTML(newCampaign.textoSimples, newCampaign.assunto, newCampaign.bannerImg, undefined, newCampaign.botaoTexto, newCampaign.botaoLink, newCampaign.preheader);
     setNewCampaign(prev => ({ ...prev, conteudoHtml: html }));
     setViewMode('html');
   };
@@ -262,10 +275,10 @@ export default function CampanhasPage() {
     // Se o HTML estiver vazio mas o texto não, gera um automático antes de salvar
     let finalHtml = newCampaign.conteudoHtml;
     if (!finalHtml && newCampaign.textoSimples) {
-      finalHtml = await generateProfessionalHTML(newCampaign.textoSimples, newCampaign.assunto, newCampaign.bannerImg, newCampaignId, newCampaign.botaoTexto, newCampaign.botaoLink);
+      finalHtml = await generateProfessionalHTML(newCampaign.textoSimples, newCampaign.assunto, newCampaign.bannerImg, newCampaignId, newCampaign.botaoTexto, newCampaign.botaoLink, newCampaign.preheader);
     } else if (finalHtml && newCampaign.bannerImg && newCampaign.bannerImg.startsWith('data:image')) {
       // Se o usuário clicou em "Transformar em HTML" antes, o HTML tem o base64 chumbado. Precisamos regenerar com a URL da API.
-      finalHtml = await generateProfessionalHTML(newCampaign.textoSimples, newCampaign.assunto, newCampaign.bannerImg, newCampaignId, newCampaign.botaoTexto, newCampaign.botaoLink);
+      finalHtml = await generateProfessionalHTML(newCampaign.textoSimples, newCampaign.assunto, newCampaign.bannerImg, newCampaignId, newCampaign.botaoTexto, newCampaign.botaoLink, newCampaign.preheader);
     }
 
     const campaign: Campaign = {
@@ -273,7 +286,8 @@ export default function CampanhasPage() {
       ...newCampaign,
       conteudoHtml: finalHtml,
       dataCriacao: new Date().toISOString(),
-      status: 'rascunho',
+      dataAgendada: newCampaign.tipoEnvio === 'agendado' ? newCampaign.dataAgendada : undefined,
+      status: newCampaign.tipoEnvio === 'agendado' ? 'agendada' : 'rascunho',
       totalLeads: 0,
       totalEnviados: 0,
       totalPendentes: 0,
@@ -285,7 +299,7 @@ export default function CampanhasPage() {
     await api.saveCampaign(campaign);
     setCampaigns(await api.getCampaigns());
     setIsCreating(false);
-    setNewCampaign({ nome: '', assunto: '', conteudoHtml: '', textoSimples: '', bannerImg: '', botaoTexto: '', botaoLink: '' });
+    setNewCampaign({ nome: '', assunto: '', preheader: '', conteudoHtml: '', textoSimples: '', bannerImg: '', botaoTexto: '', botaoLink: '', tipoEnvio: 'imediato', dataAgendada: '' });
   };
 
   const startCampaign = async (campaign: Campaign) => {
@@ -409,9 +423,23 @@ export default function CampanhasPage() {
                   type="text" 
                   className="btn-outline" 
                   style={{ width: '100%', height: '42px', padding: '0 1rem' }} 
-                  placeholder="Subject do e-mail"
+                  placeholder="Ex: Você não pode perder essa!"
                   value={newCampaign.assunto}
                   onChange={e => setNewCampaign({...newCampaign, assunto: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '0.75rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Preheader (Opcional)</label>
+                <input 
+                  type="text" 
+                  className="btn-outline" 
+                  style={{ width: '100%', height: '42px', padding: '0 1rem' }} 
+                  placeholder="Texto curto que aparece após o assunto"
+                  value={newCampaign.preheader}
+                  onChange={e => setNewCampaign({...newCampaign, preheader: e.target.value})}
                 />
               </div>
               <div>
@@ -438,6 +466,34 @@ export default function CampanhasPage() {
                   )}
                 </div>
               </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '0.75rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Tipo de Envio</label>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', border: '1px solid var(--border)', borderRadius: '8px', cursor: 'pointer', background: newCampaign.tipoEnvio === 'imediato' ? 'rgba(99, 102, 241, 0.05)' : 'transparent', borderColor: newCampaign.tipoEnvio === 'imediato' ? 'var(--primary)' : 'var(--border)' }}>
+                    <input type="radio" name="tipoEnvio" checked={newCampaign.tipoEnvio === 'imediato'} onChange={() => setNewCampaign({...newCampaign, tipoEnvio: 'imediato'})} />
+                    <span style={{ fontSize: '0.875rem' }}>Enviar Agora</span>
+                  </label>
+                  <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', border: '1px solid var(--border)', borderRadius: '8px', cursor: 'pointer', background: newCampaign.tipoEnvio === 'agendado' ? 'rgba(99, 102, 241, 0.05)' : 'transparent', borderColor: newCampaign.tipoEnvio === 'agendado' ? 'var(--primary)' : 'var(--border)' }}>
+                    <input type="radio" name="tipoEnvio" checked={newCampaign.tipoEnvio === 'agendado'} onChange={() => setNewCampaign({...newCampaign, tipoEnvio: 'agendado'})} />
+                    <span style={{ fontSize: '0.875rem' }}>Agendar</span>
+                  </label>
+                </div>
+              </div>
+              {newCampaign.tipoEnvio === 'agendado' && (
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Data e Hora do Início</label>
+                  <input 
+                    type="datetime-local" 
+                    className="btn-outline" 
+                    style={{ width: '100%', height: '42px', padding: '0 1rem' }} 
+                    value={newCampaign.dataAgendada}
+                    onChange={e => setNewCampaign({...newCampaign, dataAgendada: e.target.value})}
+                  />
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '0.75rem' }}>
@@ -622,7 +678,7 @@ export default function CampanhasPage() {
                     <Play size={16} /> Iniciar Envio
                   </button>
                 ) : (
-                  <button className="btn btn-outline">
+                  <button className="btn btn-outline" onClick={() => setReportModal(campaign)}>
                     Ver Relatório
                   </button>
                 )}
@@ -712,6 +768,67 @@ export default function CampanhasPage() {
           </div>
         </div>
       )}
+      {/* MODAL DE RELATÓRIO DE CAMPANHA */}
+      {reportModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.8)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+          <div className="card" style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Relatório da Campanha</h3>
+                <p style={{ color: '#64748b', fontSize: '0.875rem' }}>{reportModal.nome}</p>
+              </div>
+              <button 
+                className="btn btn-outline" 
+                style={{ width: '36px', height: '36px', padding: 0 }}
+                onClick={() => setReportModal(null)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)', marginBottom: '0.5rem' }}>
+                  <MailOpen size={16} /> <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Aberturas Únicas</span>
+                </div>
+                <p style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a' }}>{reportModal.totalAbertos || 0}</p>
+              </div>
+              
+              <div style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#8b5cf6', marginBottom: '0.5rem' }}>
+                  <MousePointerClick size={16} /> <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Cliques no Link</span>
+                </div>
+                <p style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a' }}>{reportModal.totalCliques || 0}</p>
+              </div>
+
+              <div style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--success)', marginBottom: '0.5rem' }}>
+                  <BarChart3 size={16} /> <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Taxa de Clique (CTR)</span>
+                </div>
+                <p style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a' }}>
+                  {reportModal.totalAbertos && reportModal.totalAbertos > 0 
+                    ? ((reportModal.totalCliques || 0) / reportModal.totalAbertos * 100).toFixed(1)
+                    : '0.0'}%
+                </p>
+              </div>
+
+              <div style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-dark)', marginBottom: '0.5rem' }}>
+                  <Send size={16} /> <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Total Enviado</span>
+                </div>
+                <p style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a' }}>{reportModal.totalEnviados}</p>
+              </div>
+            </div>
+
+            {reportModal.totalErro > 0 && (
+              <div style={{ padding: '1rem', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '8px', color: '#991b1b', fontSize: '0.875rem' }}>
+                <strong>Atenção:</strong> Houveram {reportModal.totalErro} erros no envio desta campanha. Verifique os logs de erro ou seu limite de e-mails diário.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -20,6 +20,7 @@ import {
   UserPlus,
   Layout as LayoutIcon,
   MessageCircle,
+  Smartphone,
   LogIn
 } from 'lucide-react';
 
@@ -40,7 +41,8 @@ export default function ClientLayout({
     '/integracoes', 
     '/captura-editor', 
     '/configuracoes',
-    '/whatsapp'
+    '/whatsapp',
+    '/bio'
   ];
 
   // Se a rota NÃO estiver na lista acima, consideramos que é uma Página de Captura pública
@@ -133,6 +135,10 @@ export default function ClientLayout({
             <Link href="/whatsapp" className={`nav-link ${pathname === '/whatsapp' ? 'active' : ''}`}>
               <MessageCircle size={20} />
               <span className="nav-text">Botão WhatsApp</span>
+            </Link>
+            <Link href="/bio" className={`nav-link ${pathname === '/bio' ? 'active' : ''}`}>
+              <Smartphone size={20} />
+              <span className="nav-text">Link na Bio</span>
             </Link>
             <Link href="/configuracoes" className={`nav-link ${pathname === '/configuracoes' ? 'active' : ''}`}>
               <SettingsIcon size={20} />
