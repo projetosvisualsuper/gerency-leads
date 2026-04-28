@@ -9,7 +9,7 @@ export async function GET(
   const { id } = await params;
 
   try {
-    const bioDoc = await getDoc(doc(db, 'bioLinks', id));
+    const bioDoc = await getDoc(doc(db, 'bio_links', id));
     
     if (!bioDoc.exists()) {
       return new NextResponse('Not Found', { status: 404 });
