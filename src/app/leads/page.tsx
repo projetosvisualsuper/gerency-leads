@@ -14,7 +14,8 @@ import {
   Eye,
   Info,
   Download,
-  Upload
+  Upload,
+  Check
 } from 'lucide-react';
 
 export default function LeadsPage() {
