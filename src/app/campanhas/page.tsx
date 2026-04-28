@@ -128,6 +128,7 @@ export default function CampanhasPage() {
     `).join('');
 
     const empresa = settings.empresa || { website: 'www.visualsuper.com.br', endereco: '' };
+    const headerColor = settings.landingPage?.headerColor || '#ffffff';
 
     return `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -141,10 +142,10 @@ export default function CampanhasPage() {
   <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px; background-color:#ffffff; border-radius:8px; overflow:hidden; border-top: 6px solid ${brandColor}; margin: 0 auto;">
     ${finalLogo ? `
     <tr>
-      <td align="center" style="padding:30px 20px; background-color:#ffffff;">
+      <td align="center" style="padding:30px 20px; background-color:${headerColor};">
         <img src="${finalLogo}" alt="${brandName}" width="180" style="display:block; border:0; max-width: 100%;">
       </td>
-    </tr>` : `<tr><td align="center" style="padding:20px; font-size:24px; font-weight:bold; color:${brandColor};">${brandName}</td></tr>`}
+    </tr>` : `<tr><td align="center" style="padding:20px; font-size:24px; font-weight:bold; color:${brandColor}; background-color:${headerColor};">${brandName}</td></tr>`}
     
     ${finalBanner ? `
     <tr>

@@ -66,7 +66,7 @@ export interface WhatsappWidgetConfig {
   atendentes: Attendant[];
 }
 
-export interface LandingPageSettings {
+export interface  LandingPageSettings {
   titulo: string;
   subtitulo: string;
   destaque: string;
@@ -79,6 +79,7 @@ export interface LandingPageSettings {
   formColor: string;
   botaoColor: string;
   logoUrl?: string;
+  headerColor?: string;
   downloadFileUrl?: string;
   videoUrl?: string;
   eventDate?: string;
@@ -117,6 +118,7 @@ export interface Settings {
     formColor: string;
     botaoColor: string;
     logoUrl?: string;
+    headerColor?: string;
   };
   empresa: {
     website: string;

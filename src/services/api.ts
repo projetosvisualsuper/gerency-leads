@@ -49,7 +49,8 @@ const initialSettings: Settings = {
     backgroundUrl: '/images/sales-bg.png',
     formColor: '#3b82f6',
     botaoColor: '#fbbf24',
-    logoUrl: ''
+    logoUrl: '',
+    headerColor: '#ffffff'
   },
   empresa: {
     website: 'www.visualsuper.com.br',

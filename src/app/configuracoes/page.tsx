@@ -195,6 +195,21 @@ export default function ConfigPage() {
                 </div>
               )}
             </div>
+            
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>
+                Cor de Fundo do Topo (Atrás da Logo)
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <input 
+                  type="color" 
+                  style={{ width: '50px', height: '42px', padding: '0', cursor: 'pointer', border: 'none' }} 
+                  value={settings.landingPage?.headerColor || '#ffffff'}
+                  onChange={e => setSettings({...settings, landingPage: {...settings.landingPage, headerColor: e.target.value}})}
+                />
+                <span style={{ fontSize: '0.875rem', color: '#64748b' }}>Escolha a cor que combine com a sua versão da logomarca</span>
+              </div>
+            </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div>
