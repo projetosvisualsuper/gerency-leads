@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/services/api';
 import { Campaign, Lead } from '@/types/crm';
-import { ref, uploadBytes, getDownloadURL, uploadString } from 'firebase/storage';
-import { storage } from '@/lib/firebase';
 import { 
   Plus, 
   Send, 
@@ -89,24 +87,7 @@ export default function CampanhasPage() {
     }
   }, [isPreviewOpen, selectedCampaignHtml, viewMode, newCampaign]);
 
-  const uploadToFirebaseWithTimeout = async (base64Str: string, path: string): Promise<string> => {
-    return new Promise(async (resolve) => {
-      const timeout = setTimeout(() => resolve(base64Str), 5000); // 5s timeout fallback
-      try {
-        const imageRef = ref(storage, path);
-        await uploadString(imageRef, base64Str, 'data_url');
-        const url = await getDownloadURL(imageRef);
-        clearTimeout(timeout);
-        resolve(url);
-      } catch (err) {
-        clearTimeout(timeout);
-        console.error('Firebase upload failed or denied:', err);
-        resolve(base64Str);
-      }
-    });
-  };
-
-  const generateProfessionalHTML = async (text: string, subject: string, bannerImg?: string) => {
+  const generateProfessionalHTML = async (text: string, subject: string, bannerImg?: string, campaignId?: string) => {
     const settings = await api.getSettings();
     const brandName = settings.landingPage?.titulo || 'Gerency Leads';
     const brandColor = settings.landingPage?.formColor || '#4f46e5';
@@ -114,19 +95,27 @@ export default function CampanhasPage() {
     
     let logoUrl = settings.landingPage?.logoUrl;
     
-    // Tenta fazer upload da logo base64 pro Firebase para não quebrar no e-mail (com timeout de segurança)
-    if (logoUrl && logoUrl.startsWith('data:image')) {
-      logoUrl = await uploadToFirebaseWithTimeout(logoUrl, `campanhas/logos/auto_logo_${Date.now()}`);
+    let finalLogo = null;
+    if (logoUrl) {
+      if (logoUrl.startsWith('data:image')) {
+        finalLogo = `${websiteUrl}/api/img/logo`; // Endpoint dinâmico
+      } else if (!logoUrl.startsWith('http')) {
+        finalLogo = websiteUrl + logoUrl;
+      } else {
+        finalLogo = logoUrl;
+      }
     }
     
-    const finalLogo = logoUrl ? (logoUrl.startsWith('http') || logoUrl.startsWith('data:') ? logoUrl : `${websiteUrl}${logoUrl}`) : null;
-    
-    // Tenta fazer upload do banner base64
-    let finalBanner = bannerImg;
-    if (finalBanner && finalBanner.startsWith('data:image')) {
-      finalBanner = await uploadToFirebaseWithTimeout(finalBanner, `campanhas/banners/auto_banner_${Date.now()}`);
-    } else if (finalBanner && !finalBanner.startsWith('http')) {
-      finalBanner = websiteUrl + finalBanner;
+    let finalBanner = null;
+    if (bannerImg) {
+      if (bannerImg.startsWith('data:image')) {
+        // Se temos um ID de campanha (salvamento), usamos a API. Se não (preview), mantemos base64 para aparecer na hora.
+        finalBanner = campaignId ? `${websiteUrl}/api/img/banner/${campaignId}` : bannerImg;
+      } else if (!bannerImg.startsWith('http')) {
+        finalBanner = websiteUrl + bannerImg;
+      } else {
+        finalBanner = bannerImg;
+      }
     }
 
     const paragraphs = text.split('\n').filter(p => p.trim() !== '');
@@ -242,14 +231,19 @@ export default function CampanhasPage() {
   };
 
   const handleCreate = async () => {
+    const newCampaignId = Math.random().toString(36).substr(2, 9);
+    
     // Se o HTML estiver vazio mas o texto não, gera um automático antes de salvar
     let finalHtml = newCampaign.conteudoHtml;
     if (!finalHtml && newCampaign.textoSimples) {
-      finalHtml = await generateProfessionalHTML(newCampaign.textoSimples, newCampaign.assunto, newCampaign.bannerImg);
+      finalHtml = await generateProfessionalHTML(newCampaign.textoSimples, newCampaign.assunto, newCampaign.bannerImg, newCampaignId);
+    } else if (finalHtml && newCampaign.bannerImg && newCampaign.bannerImg.startsWith('data:image')) {
+      // Se o usuário clicou em "Transformar em HTML" antes, o HTML tem o base64 chumbado. Precisamos regenerar com a URL da API.
+      finalHtml = await generateProfessionalHTML(newCampaign.textoSimples, newCampaign.assunto, newCampaign.bannerImg, newCampaignId);
     }
 
     const campaign: Campaign = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: newCampaignId,
       ...newCampaign,
       conteudoHtml: finalHtml,
       dataCriacao: new Date().toISOString(),
