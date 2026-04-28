@@ -106,7 +106,7 @@ function RenderBioLink({ bio }: { bio: BioLink }) {
         <div style={{ marginBottom: '2rem' }}>
           <div style={{ 
             width: '100px', height: '100px', borderRadius: '50%', margin: '0 auto 1.5rem', 
-            border: `3px solid ${bio.theme.buttonBackground}`, padding: '4px', background: 'white'
+            overflow: 'hidden', background: 'white', boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
           }}>
             <img 
               src={bio.avatarUrl || 'https://via.placeholder.com/100'} 

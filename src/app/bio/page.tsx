@@ -843,7 +843,7 @@ export default function BioLinksPage() {
             fontFamily: 'Inter, sans-serif'
           }}>
             <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-              <div style={{ width: '90px', height: '90px', borderRadius: '50%', background: '#e2e8f0', margin: '0 auto 1rem', overflow: 'hidden', border: `3px solid ${currentBio.theme.buttonBackground}` }}>
+              <div style={{ width: '90px', height: '90px', borderRadius: '50%', background: 'white', margin: '0 auto 1rem', overflow: 'hidden', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
                 {currentBio.avatarUrl && <img src={currentBio.avatarUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
               </div>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>{currentBio.profileName}</h2>
