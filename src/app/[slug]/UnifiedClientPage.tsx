@@ -118,19 +118,7 @@ function RenderBioLink({ bio }: { bio: BioLink }) {
           <p style={{ fontSize: '1rem', opacity: 0.8, lineHeight: 1.5, color: bio.theme.textColor }}>{bio.bio}</p>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginBottom: '2.5rem', flexWrap: 'wrap' }}>
-          {bio.socials.map(social => (
-            <a 
-              key={social.platform} href={social.url} target="_blank" rel="noopener noreferrer"
-              style={{ color: 'inherit', transition: 'transform 0.2s' }}
-              onMouseOver={e => e.currentTarget.style.transform = 'scale(1.2)'}
-              onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
-              onClick={handleItemClick}
-            >
-              {renderBioSocialIcon(social.platform, 28, bio.theme.socialIconColor || bio.theme.textColor)}
-            </a>
-          ))}
-        </div>
+
 
         <div style={{ display: 'grid', gap: '1.25rem' }}>
           {bio.items.filter(item => item.isActive).map(item => {
@@ -209,6 +197,19 @@ function RenderBioLink({ bio }: { bio: BioLink }) {
         </div>
 
         <footer style={{ marginTop: '4rem', paddingBottom: '3rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginBottom: '2.5rem', flexWrap: 'wrap' }}>
+            {bio.socials.map(social => (
+              <a 
+                key={social.platform} href={social.url} target="_blank" rel="noopener noreferrer"
+                style={{ color: 'inherit', transition: 'transform 0.2s' }}
+                onMouseOver={e => e.currentTarget.style.transform = 'scale(1.2)'}
+                onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+                onClick={handleItemClick}
+              >
+                {renderBioSocialIcon(social.platform, 28, bio.theme.socialIconColor || bio.theme.textColor)}
+              </a>
+            ))}
+          </div>
           {bio.footerLogoUrl && <img src={bio.footerLogoUrl} style={{ height: '45px', objectFit: 'contain', margin: '0 auto', display: 'block' }} alt="Logo" />}
         </footer>
       </div>

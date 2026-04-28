@@ -189,12 +189,34 @@ export default function BioLinksPage() {
     );
   };
 
-  const compressImage = (base64: string, maxWidth = 800, format = 'image/jpeg'): Promise<string> => {
+  const compressImage = (base64: string, maxWidth = 800, format = 'image/jpeg', addPadding = false): Promise<string> => {
     return new Promise((resolve) => {
       const img = new Image();
       img.src = base64;
       img.onload = () => {
         const canvas = document.createElement('canvas');
+        
+        if (addPadding) {
+          const size = maxWidth;
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            if (format !== 'image/png') {
+              ctx.fillStyle = 'white';
+              ctx.fillRect(0, 0, size, size);
+            }
+            const scale = (size * 0.75) / Math.max(img.width, img.height);
+            const dw = img.width * scale;
+            const dh = img.height * scale;
+            const dx = (size - dw) / 2;
+            const dy = (size - dh) / 2;
+            ctx.drawImage(img, dx, dy, dw, dh);
+          }
+          resolve(canvas.toDataURL(format, 0.8));
+          return;
+        }
+
         let width = img.width;
         let height = img.height;
 
@@ -207,7 +229,7 @@ export default function BioLinksPage() {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL(format, 0.7));
+        resolve(canvas.toDataURL(format, 0.8));
       };
     });
   };
@@ -217,7 +239,8 @@ export default function BioLinksPage() {
     if (!file) return;
     const reader = new FileReader();
     reader.onloadend = async () => {
-      const compressed = await compressImage(reader.result as string, 300);
+      // Adicionar padding para não cortar no WhatsApp
+      const compressed = await compressImage(reader.result as string, 400, 'image/jpeg', true);
       if (currentBio) setCurrentBio({ ...currentBio, avatarUrl: compressed });
     };
     reader.readAsDataURL(file);
@@ -826,13 +849,7 @@ export default function BioLinksPage() {
               <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>{currentBio.profileName}</h2>
               <p style={{ fontSize: '0.875rem', opacity: 0.8, marginBottom: '1rem' }}>{currentBio.bio}</p>
               
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '1.25rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-                {currentBio.socials.map(s => (
-                  <div key={s.platform} style={{ transition: 'transform 0.2s' }}>
-                    {renderSocialIcon(s.platform, 24, currentBio.theme.socialIconColor || currentBio.theme.textColor)}
-                  </div>
-                ))}
-              </div>
+
 
               <div style={{ display: 'grid', gap: '1rem' }}>
                 {currentBio.items.filter(i => i.isActive).map(item => (
@@ -934,6 +951,13 @@ export default function BioLinksPage() {
                   </div>
                 ))}
                 <div style={{ marginTop: '2rem', textAlign: 'center', paddingBottom: '2rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '1.25rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+                    {currentBio.socials.map(s => (
+                      <div key={s.platform} style={{ transition: 'transform 0.2s' }}>
+                        {renderSocialIcon(s.platform, 24, currentBio.theme.socialIconColor || currentBio.theme.textColor)}
+                      </div>
+                    ))}
+                  </div>
                   {currentBio.footerLogoUrl && (
                     <img src={currentBio.footerLogoUrl} style={{ height: '35px', objectFit: 'contain', margin: '0 auto', display: 'block' }} />
                   )}
