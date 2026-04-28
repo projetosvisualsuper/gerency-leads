@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense, use } from 'react';
 import { api } from '@/services/api';
 import { Lead, LandingPageInstance, BioLink } from '@/types/crm';
-import { CheckCircle2, ChevronRight, Check, Calendar, MessageCircle, X, User, Smartphone, Globe, ShoppingCart, Share2 } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Check, Calendar, MessageCircle, X, User, Smartphone, Globe, ShoppingCart, Share2, Link as LinkIcon, Star } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
 const DEFAULT_BGS = {
@@ -57,6 +57,18 @@ const renderBioSocialIcon = (platform: string, size: number = 24, color?: string
       <path d={svgPaths[platform] || svgPaths.instagram} />
     </svg>
   );
+};
+
+const renderLinkIcon = (iconName: string, size: number = 24) => {
+  switch (iconName) {
+    case 'smartphone': return <Smartphone size={size} />;
+    case 'globe': return <Globe size={size} />;
+    case 'shopping-cart': return <ShoppingCart size={size} />;
+    case 'link': return <LinkIcon size={size} />;
+    case 'star': return <Star size={size} />;
+    case 'message-circle': return <MessageCircle size={size} />;
+    default: return <Globe size={size} />;
+  }
 };
 
 const getBioYoutubeEmbed = (url: string) => {
@@ -187,7 +199,7 @@ function RenderBioLink({ bio }: { bio: BioLink }) {
                   </div>
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    {renderBioSocialIcon(item.icon || 'link', 22)}
+                    {renderLinkIcon(item.icon || 'link', 22)}
                     <span>{item.title}</span>
                   </div>
                 )}
