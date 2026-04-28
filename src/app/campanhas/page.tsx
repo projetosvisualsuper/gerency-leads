@@ -63,7 +63,9 @@ export default function CampanhasPage() {
     assunto: '',
     conteudoHtml: '',
     textoSimples: '',
-    bannerImg: ''
+    bannerImg: '',
+    botaoTexto: '',
+    botaoLink: ''
   });
 
   useEffect(() => {
