@@ -66,7 +66,7 @@ const renderLinkIcon = (iconName: string, size: number = 24) => {
     case 'shopping-cart': return <ShoppingCart size={size} />;
     case 'link': return <LinkIcon size={size} />;
     case 'star': return <Star size={size} />;
-    case 'message-circle': return <MessageCircle size={size} />;
+    case 'message-circle': return renderBioSocialIcon('whatsapp', size);
     default: return <Globe size={size} />;
   }
 };

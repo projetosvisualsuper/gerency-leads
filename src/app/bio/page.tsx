@@ -924,9 +924,9 @@ export default function BioLinksPage() {
                         {item.icon === 'shopping-cart' && <ShoppingCart size={18} />}
                         {item.icon === 'smartphone' && <Smartphone size={18} />}
                         {item.icon === 'link' && <LinkIcon size={18} />}
-                        {item.icon === 'star' && <Plus size={18} />}
+                        {item.icon === 'star' && <Star size={18} />}
                         {item.icon === 'globe' && <Globe size={18} />}
-                        {item.icon === 'message-circle' && <MessageCircle size={18} />}
+                        {item.icon === 'message-circle' && renderSocialIcon('whatsapp', 18)}
                         {item.title}
                       </div>
                     )}
