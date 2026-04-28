@@ -19,7 +19,8 @@ import {
   Save,
   X,
   ShoppingCart,
-  MessageCircle
+  MessageCircle,
+  Star
 } from 'lucide-react';
 
 export default function BioLinksPage() {
