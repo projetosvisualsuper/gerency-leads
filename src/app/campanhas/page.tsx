@@ -141,17 +141,32 @@ export default function CampanhasPage() {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="x-apple-disable-message-reformatting">
 <title>${subject}</title>
+<style>
+  body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+  table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+  img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; max-width: 100%; }
+  
+  @media screen and (max-width: 600px) {
+    .container { width: 100% !important; max-width: 100% !important; }
+    .wrapper { padding: 10px !important; }
+    .content-area { padding: 25px 15px !important; }
+    .header-area { padding: 20px 15px !important; }
+    .footer-area { padding: 20px 15px !important; }
+    .responsive-btn { padding: 12px 20px !important; font-size: 14px !important; display: block !important; width: 100% !important; box-sizing: border-box !important; }
+  }
+</style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: Arial, sans-serif;">
-<div style="background-color:#f3f4f6; padding:20px; font-family:Arial,sans-serif; width:100%;">
-  <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px; background-color:#ffffff; border-radius:8px; overflow:hidden; border-top: 6px solid ${brandColor}; margin: 0 auto;">
+<div class="wrapper" style="background-color:#f3f4f6; padding:20px; font-family:Arial,sans-serif; width:100%; box-sizing: border-box;">
+  <table class="container" align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px; background-color:#ffffff; border-radius:8px; overflow:hidden; border-top: 6px solid ${brandColor}; margin: 0 auto;">
     ${finalLogo ? `
     <tr>
-      <td align="center" style="padding:30px 20px; background-color:${headerColor};">
+      <td class="header-area" align="center" style="padding:30px 20px; background-color:${headerColor};">
         <img src="${finalLogo}" alt="${brandName}" width="180" style="display:block; border:0; max-width: 100%;">
       </td>
-    </tr>` : `<tr><td align="center" style="padding:20px; font-size:24px; font-weight:bold; color:${brandColor}; background-color:${headerColor};">${brandName}</td></tr>`}
+    </tr>` : `<tr><td class="header-area" align="center" style="padding:20px; font-size:24px; font-weight:bold; color:${brandColor}; background-color:${headerColor};">${brandName}</td></tr>`}
     
     ${finalBanner ? `
     <tr>
@@ -161,12 +176,12 @@ export default function CampanhasPage() {
     </tr>` : ''}
 
     <tr>
-      <td style="padding:40px 30px;">
+      <td class="content-area" style="padding:40px 30px;">
         <table border="0" cellpadding="0" cellspacing="0" width="100%">
           ${bodyContent}
           <tr>
             <td align="center" style="padding:30px 0;">
-              <a href="${botaoLink || websiteUrl}" style="background-color:${brandColor}; color:#ffffff; padding:15px 35px; text-decoration:none; border-radius:50px; font-weight:bold; display:inline-block;">${botaoTexto || 'Acesse os detalhes agora'}</a>
+              <a href="${botaoLink || websiteUrl}" class="responsive-btn" style="background-color:${brandColor}; color:#ffffff; padding:15px 35px; text-decoration:none; border-radius:50px; font-weight:bold; display:inline-block;">${botaoTexto || 'Acesse os detalhes agora'}</a>
             </td>
           </tr>
           <tr>
@@ -179,7 +194,7 @@ export default function CampanhasPage() {
     </tr>
 
     <tr>
-      <td align="center" style="padding:30px; background-color:#f9fafb; font-size:12px; color:#6b7280; line-height:1.5;">
+      <td class="footer-area" align="center" style="padding:30px; background-color:#f9fafb; font-size:12px; color:#6b7280; line-height:1.5;">
         <p style="margin-bottom:10px;"><strong>NOSSAS REDES SOCIAIS</strong></p>
         <table border="0" cellpadding="0" cellspacing="0" style="margin-bottom:20px;" align="center">
           <tr>
