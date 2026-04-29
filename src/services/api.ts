@@ -1,4 +1,4 @@
-import { Lead, Campaign, FilaEnvio, Settings, LandingPageInstance, LandingPageSettings, BioLink } from '@/types/crm';
+import { Lead, Campaign, FilaEnvio, Settings, LandingPageInstance, LandingPageSettings, BioLink, UserProfile } from '@/types/crm';
 import { db } from '@/lib/firebase';
 import { sendEmailBrevoAction } from '@/app/actions/brevo';
 import { processQueueServerAction } from '@/app/actions/queue';
