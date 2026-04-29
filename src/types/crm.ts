@@ -126,6 +126,7 @@ export interface Settings {
     botaoColor: string;
     logoUrl?: string;
     headerColor?: string;
+    ogLogoUrl?: string;
   };
   empresa: {
     website: string;

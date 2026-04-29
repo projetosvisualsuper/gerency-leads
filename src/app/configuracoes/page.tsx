@@ -41,7 +41,8 @@ export default function ConfigPage() {
       botaoColor: '',
       formColor: '',
       logoUrl: '',
-      backgroundUrl: ''
+      backgroundUrl: '',
+      ogLogoUrl: ''
     },
     empresa: {
       website: '',
@@ -70,23 +71,61 @@ export default function ConfigPage() {
     setTimeout(() => setSaved(false), 3000);
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const compressImage = (file: File, maxWidth: number, maxHeight: number, quality: number = 0.7): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxWidth) {
+              height *= maxWidth / width;
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width *= maxHeight / height;
+              height = maxHeight;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+      };
+    });
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      alert("A imagem é muito grande! Por favor, use uma de até 2MB.");
-      return;
-    }
+    const compressed = await compressImage(file, 300, 300, 0.5);
+    setSettings(prev => ({ 
+      ...prev, 
+      landingPage: { ...prev.landingPage, logoUrl: compressed }
+    }));
+  };
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setSettings(prev => ({ 
-        ...prev, 
-        landingPage: { ...prev.landingPage, logoUrl: reader.result as string }
-      }));
-    };
-    reader.readAsDataURL(file);
+  const handleOGLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Redução agressiva para caber no limite do Firestore
+    const compressed = await compressImage(file, 800, 450, 0.4);
+    setSettings(prev => ({ 
+      ...prev, 
+      landingPage: { ...prev.landingPage, ogLogoUrl: compressed }
+    }));
   };
 
   const toggleNotification = (key: keyof Settings['notificacoes']) => {
@@ -194,6 +233,37 @@ export default function ConfigPage() {
                   <img src={settings.landingPage.logoUrl} alt="Logo" style={{ maxHeight: '40px', objectFit: 'contain' }} />
                 </div>
               )}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>
+                Logotipo de Compartilhamento (WhatsApp / Social Media)
+              </label>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={handleOGLogoUpload}
+                  style={{ fontSize: '0.875rem' }}
+                />
+                {settings.landingPage?.ogLogoUrl && (
+                  <button 
+                    className="btn btn-outline"
+                    style={{ fontSize: '0.75rem', height: '32px', color: 'var(--danger)', borderColor: 'var(--danger)' }}
+                    onClick={() => setSettings(prev => ({ ...prev, landingPage: { ...prev.landingPage, ogLogoUrl: '' } }))}
+                  >
+                    Remover
+                  </button>
+                )}
+              </div>
+              {settings.landingPage?.ogLogoUrl && settings.landingPage.ogLogoUrl.startsWith('data:image') && (
+                <div style={{ marginTop: '0.5rem' }}>
+                  <img src={settings.landingPage.ogLogoUrl} alt="OG Logo" style={{ maxHeight: '60px', objectFit: 'contain', border: '1px solid var(--border)', padding: '5px', borderRadius: '5px' }} />
+                </div>
+              )}
+              <p style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.25rem' }}>
+                Esta imagem aparecerá quando você compartilhar o link da sua página. Recomendado: 1200x630px.
+              </p>
             </div>
             
             <div>

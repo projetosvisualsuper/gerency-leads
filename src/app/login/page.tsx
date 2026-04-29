@@ -10,7 +10,8 @@ import {
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup,
-  signOut
+  signOut,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { api } from '@/services/api';
 import { UserProfile } from '@/types/crm';
@@ -27,6 +28,7 @@ export default function LoginPage() {
     name: ''
   });
   const [isPending, setIsPending] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -126,6 +128,27 @@ export default function LoginPage() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!formData.email) {
+      setError('Por favor, digite seu e-mail no campo acima primeiro.');
+      return;
+    }
+    
+    setIsLoading(true);
+    setError('');
+    try {
+      await sendPasswordResetEmail(auth, formData.email);
+      setResetSent(true);
+      setError('');
+    } catch (err: any) {
+      console.error(err);
+      if (err.code === 'auth/user-not-found') setError('Usuário não encontrado.');
+      else setError('Erro ao enviar e-mail de recuperação: ' + err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div style={{ 
       minHeight: '100vh', 
@@ -175,6 +198,12 @@ export default function LoginPage() {
         {error && (
           <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--danger)', color: 'var(--danger)', padding: '0.75rem', borderRadius: '12px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', textAlign: 'left' }}>
             <AlertCircle size={18} /> {error}
+          </div>
+        )}
+
+        {resetSent && (
+          <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid var(--success)', color: '#10b981', padding: '0.75rem', borderRadius: '12px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', textAlign: 'left' }}>
+            <ShieldCheck size={18} /> E-mail de recuperação enviado com sucesso! Verifique sua caixa de entrada.
           </div>
         )}
 
@@ -244,7 +273,7 @@ export default function LoginPage() {
               <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.6)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Senha
               </label>
-              {!isRegister && <a href="#" style={{ fontSize: '0.75rem', color: 'var(--primary)', textDecoration: 'none', fontWeight: 600 }}>Esqueceu?</a>}
+              {!isRegister && <button type="button" onClick={handleForgotPassword} style={{ fontSize: '0.75rem', color: 'var(--primary)', textDecoration: 'none', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}>Esqueceu?</button>}
             </div>
             <div style={{ position: 'relative' }}>
               <Lock size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255, 255, 255, 0.3)' }} />

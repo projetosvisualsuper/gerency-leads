@@ -10,16 +10,36 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
 
+  const settings = await api.getSettings();
+  
+  const headerList = await headers();
+  const host = headerList.get('host') || 'gerency-leads.vercel.app';
+  const protocol = headerList.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
+
+  // URL da logo global de compartilhamento via API para melhor compatibilidade
+  const globalOgImageUrl = `${protocol}://${host}/api/img/og-logo`;
+
   // Tentar carregar Landing Page primeiro
   const lp = await api.getLandingPageBySlug(slug);
   if (lp) {
+    let ogImage = lp.config.logoUrl && lp.config.logoUrl !== 'none' ? lp.config.logoUrl : globalOgImageUrl;
+    
+    // Se for base64 da logo da LP, preferir usar a logo global de compartilhamento (via API)
+    if (lp.config.logoUrl?.startsWith('data:image')) {
+      ogImage = globalOgImageUrl;
+    }
+
+    if (ogImage.startsWith('/')) {
+      ogImage = `${protocol}://${host}${ogImage}`;
+    }
+
     return {
       title: lp.config.titulo || 'Gerency Leads',
       description: lp.config.descricao || 'Página de captura profissional.',
       openGraph: {
         title: lp.config.titulo || 'Gerency Leads',
         description: lp.config.descricao || 'Página de captura profissional.',
-        images: [lp.config.logoUrl && lp.config.logoUrl !== 'none' ? lp.config.logoUrl : '/images/sales-bg.png'],
+        images: [{ url: ogImage }],
       },
     };
   }
@@ -35,7 +55,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     if (bio.avatarUrl?.startsWith('data:image')) {
       imageUrl = `${protocol}://${host}/api/bio-image/${bio.id}`;
     } else {
-      imageUrl = bio.avatarUrl || `${protocol}://${host}/images/minimalist-bg.png`;
+      imageUrl = bio.avatarUrl || globalOgImageUrl || `${protocol}://${host}/images/minimalist-bg.png`;
     }
 
     // Garantir que a URL seja absoluta para o WhatsApp

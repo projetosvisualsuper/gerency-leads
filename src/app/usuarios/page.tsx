@@ -14,7 +14,8 @@ import {
   AlertCircle,
   Edit2,
   Save,
-  X
+  X,
+  Mail
 } from 'lucide-react';
 
 export default function UsuariosPage() {
@@ -206,22 +207,20 @@ export default function UsuariosPage() {
         </table>
       </div>
 
-      </div>
-
       {editingUser && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
           <div className="card" style={{ maxWidth: '450px', width: '100%', padding: '2rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontWeight: 700, fontSize: '1.25rem' }}>Editar Usuário</h3>
-              <button onClick={() => setEditingUser(null)} style={{ opacity: 0.5 }}><X size={20} /></button>
+              <h3 style={{ fontWeight: 700, fontSize: '1.25rem', color: '#1e293b' }}>Editar Usuário</h3>
+              <button onClick={() => setEditingUser(null)} style={{ opacity: 0.5, color: '#1e293b' }}><X size={20} /></button>
             </div>
 
             <div style={{ display: 'grid', gap: '1.25rem' }}>
               <div style={{ display: 'grid', gap: '0.5rem' }}>
-                <label style={{ fontSize: '0.875rem', fontWeight: 600 }}>Nome Completo</label>
+                <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>Nome Completo</label>
                 <input 
                   className="btn-outline"
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', color: '#1e293b' }}
                   value={editForm.name}
                   onChange={e => setEditForm({ ...editForm, name: e.target.value })}
                   placeholder="Ex: João Silva"
@@ -229,10 +228,10 @@ export default function UsuariosPage() {
               </div>
 
               <div style={{ display: 'grid', gap: '0.5rem' }}>
-                <label style={{ fontSize: '0.875rem', fontWeight: 600 }}>Nível de Acesso</label>
+                <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>Nível de Acesso</label>
                 <select 
                   className="btn-outline"
-                  style={{ width: '100%', height: '42px' }}
+                  style={{ width: '100%', height: '42px', color: '#1e293b' }}
                   value={editForm.role}
                   onChange={e => setEditForm({ ...editForm, role: e.target.value as any })}
                 >
@@ -243,7 +242,7 @@ export default function UsuariosPage() {
 
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                 <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSaveEdit}>
-                  <Save size={18} /> Salvar Alterações
+                  <Save size={18} /> Salvar
                 </button>
                 <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setEditingUser(null)}>
                   Cancelar
