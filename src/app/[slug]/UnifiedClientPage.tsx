@@ -435,6 +435,11 @@ export default function UnifiedClientPage({ slug, initialData }: { slug: string,
   const [loading, setLoading] = useState(!initialData);
 
   useEffect(() => {
+    // Se temos dados iniciais (Bio Link), incrementamos a view
+    if (initialData?.type === 'bio' && initialData.content?.id) {
+      api.incrementBioView(initialData.content.id).catch(err => console.error("Erro ao contar view inicial:", err));
+    }
+
     if (initialData) return;
 
     const loadContent = async () => {
@@ -448,7 +453,7 @@ export default function UnifiedClientPage({ slug, initialData }: { slug: string,
       const bio = await api.getBioLinkBySlug(slug);
       if (bio) {
         setData({ type: 'bio', content: bio });
-        api.incrementBioView(bio.id).catch(err => console.error(err));
+        api.incrementBioView(bio.id).catch(err => console.error("Erro ao contar view carregada:", err));
         setLoading(false);
         return;
       }
