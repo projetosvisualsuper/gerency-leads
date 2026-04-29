@@ -174,7 +174,7 @@ function RenderBioLink({ bio }: { bio: BioLink }) {
               const embed = getBioYoutubeEmbed(item.videoUrl || '');
               return (
                 <div key={item.id} style={{ borderRadius: '20px', overflow: 'hidden', background: bio.theme.buttonBackground, padding: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: `3px solid ${bio.theme.buttonBackground}` }}>
-                  <div style={{ borderRadius: '16px', overflow: 'hidden', background: '#000', position: 'relative', width: '100%', paddingBottom: '56.25%', height: 0 }}>
+                  <div style={{ borderRadius: '16px', overflow: 'hidden', background: '#000', position: 'relative', width: '100%', paddingBottom: '100%', height: 0 }}>
                     {embed ? (
                       <iframe 
                         src={embed} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: '0', borderRadius: '16px' }}

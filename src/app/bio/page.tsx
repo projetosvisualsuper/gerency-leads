@@ -1048,7 +1048,7 @@ export default function BioLinksPage() {
                     )}
                     {item.type === 'video' && (
                       <div style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ width: '100%', overflow: 'hidden', background: '#000', borderRadius: '12px', position: 'relative', aspectRatio: '16/9' }}>
+                        <div style={{ width: '100%', overflow: 'hidden', background: '#000', borderRadius: '12px', position: 'relative', aspectRatio: '1/1' }}>
                           {getYoutubeEmbed(item.videoUrl || '') ? (
                             <iframe 
                               src={getYoutubeEmbed(item.videoUrl || '') || ''} 
