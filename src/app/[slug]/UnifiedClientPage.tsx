@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { api } from '@/services/api';
 import { Lead, LandingPageInstance, BioLink } from '@/types/crm';
-import { CheckCircle2, ChevronRight, Check, Calendar, MessageCircle, X, User, Smartphone, Globe, ShoppingCart, Share2, Link as LinkIcon, Star } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Check, Calendar, MessageCircle, X, User, Smartphone, Globe, ShoppingCart, Share2, Link as LinkIcon, Star, ChevronLeft } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
 // --- HELPERS ---
@@ -363,6 +363,9 @@ function WhatsappWidget({ config, pageSlug }: { config: any, pageSlug: string })
                        <input required type="email" placeholder="Seu Email" style={{ width: '100%', height: '42px', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '0 1rem' }} value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
                        <input required placeholder="Seu WhatsApp" style={{ width: '100%', height: '42px', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '0 1rem' }} value={formData.telefone} onChange={e => setFormData({...formData, telefone: e.target.value})} />
                        <button type="submit" style={{ width: '100%', height: '48px', borderRadius: '8px', background: '#25D366', color: 'white', fontWeight: 700, border: 'none', cursor: 'pointer' }}>Começar Conversa</button>
+                       <button type="button" onClick={() => { setShowForm(false); setSelectedAttendant(null); }} style={{ width: '100%', height: '42px', borderRadius: '8px', background: 'transparent', color: '#64748b', fontWeight: 600, border: 'none', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+                         <ChevronLeft size={16} /> Voltar para atendentes
+                       </button>
                     </div>
                   </form>
                )}
