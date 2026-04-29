@@ -346,13 +346,13 @@ function WhatsappWidget({ config, pageSlug }: { config: any, pageSlug: string })
     <div style={{ position: 'fixed', bottom: '2rem', [config.posicao || 'right']: '2rem', zIndex: 9999 }}>
        <button onClick={() => setOpen(!open)} style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#25D366', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.3)', border: 'none', cursor: 'pointer' }}>{open ? <X size={32} /> : <MessageCircle size={32} fill="currentColor" />}</button>
        {open && (
-         <div style={{ position: 'absolute', bottom: '80px', [config.posicao || 'right']: 0, width: '350px', background: 'white', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', overflow: 'hidden' }}>
+         <div style={{ position: 'absolute', bottom: '80px', [config.posicao || 'right']: 0, width: '350px', background: 'white', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', overflow: 'hidden', color: '#1e293b' }}>
             <div style={{ background: '#25D366', padding: '1.5rem', color: 'white' }}><h3 style={{ fontWeight: 700 }}>Iniciar Conversa</h3><p style={{ fontSize: '0.85rem' }}>Escolha um atendente para falar agora.</p></div>
             <div style={{ padding: '1rem' }}>
                {!showForm ? config.atendentes.map((at: any) => (
                     <div key={at.id} onClick={() => { setSelectedAttendant(at); setShowForm(true); }} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', borderRadius: '12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }}>
                        <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#f1f5f9', overflow: 'hidden' }}>{at.avatarUrl ? <img src={at.avatarUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <User size={24} color="#94a3b8" />}</div>
-                       <div style={{ flex: 1 }}><h4 style={{ fontWeight: 700 }}>{at.nome}</h4><p style={{ fontSize: '0.75rem' }}>{at.cargo}</p></div>
+                       <div style={{ flex: 1 }}><h4 style={{ fontWeight: 700, color: '#1e293b' }}>{at.nome}</h4><p style={{ fontSize: '0.75rem', color: '#64748b' }}>{at.cargo}</p></div>
                        <MessageCircle size={18} color="#25D366" />
                     </div>
                  )) : (
