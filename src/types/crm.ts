@@ -38,6 +38,8 @@ export interface Campaign {
   totalErro: number;
   totalAbertos: number;
   totalCliques: number;
+  textoSimples?: string;
+  bannerImg?: string;
 }
 
 export interface FilaEnvio {
