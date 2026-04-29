@@ -21,7 +21,8 @@ import {
   Trash2,
   MailOpen,
   MousePointerClick,
-  BarChart3
+  BarChart3,
+  Edit2
 } from 'lucide-react';
 
 export default function CampanhasPage() {
@@ -59,6 +60,7 @@ export default function CampanhasPage() {
 
   // Modal de Relatório
   const [reportModal, setReportModal] = useState<Campaign | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   // Form State
   const [newCampaign, setNewCampaign] = useState({
@@ -270,7 +272,8 @@ ${campaignId ? `<img src="${systemUrl}/api/track?type=open&campaignId=${campaign
   };
 
   const handleCreate = async () => {
-    const newCampaignId = Math.random().toString(36).substr(2, 9);
+    const isEditing = !!editingId;
+    const newCampaignId = editingId || Math.random().toString(36).substr(2, 9);
     
     // Se o HTML estiver vazio mas o texto não, gera um automático antes de salvar
     let finalHtml = newCampaign.conteudoHtml;
@@ -281,25 +284,48 @@ ${campaignId ? `<img src="${systemUrl}/api/track?type=open&campaignId=${campaign
       finalHtml = await generateProfessionalHTML(newCampaign.textoSimples, newCampaign.assunto, newCampaign.bannerImg, newCampaignId, newCampaign.botaoTexto, newCampaign.botaoLink, newCampaign.preheader);
     }
 
+    const existingCampaign = isEditing ? campaigns.find(c => c.id === editingId) : null;
+
     const campaign: Campaign = {
+      ...existingCampaign,
       id: newCampaignId,
       ...newCampaign,
       conteudoHtml: finalHtml,
-      dataCriacao: new Date().toISOString(),
+      dataCriacao: existingCampaign?.dataCriacao || new Date().toISOString(),
       dataAgendada: newCampaign.tipoEnvio === 'agendado' ? newCampaign.dataAgendada : undefined,
-      status: newCampaign.tipoEnvio === 'agendado' ? 'agendada' : 'rascunho',
-      totalLeads: 0,
-      totalEnviados: 0,
-      totalPendentes: 0,
-      totalErro: 0,
-      totalAbertos: 0,
-      totalCliques: 0
-    };
+      status: newCampaign.tipoEnvio === 'agendado' ? 'agendada' : (existingCampaign?.status || 'rascunho'),
+      totalLeads: existingCampaign?.totalLeads || 0,
+      totalEnviados: existingCampaign?.totalEnviados || 0,
+      totalPendentes: existingCampaign?.totalPendentes || 0,
+      totalErro: existingCampaign?.totalErro || 0,
+      totalAbertos: existingCampaign?.totalAbertos || 0,
+      totalCliques: existingCampaign?.totalCliques || 0
+    } as Campaign;
     
     await api.saveCampaign(campaign);
     setCampaigns(await api.getCampaigns());
     setIsCreating(false);
+    setEditingId(null);
     setNewCampaign({ nome: '', assunto: '', preheader: '', conteudoHtml: '', textoSimples: '', bannerImg: '', botaoTexto: '', botaoLink: '', tipoEnvio: 'imediato', dataAgendada: '' });
+  };
+
+  const handleEdit = (campaign: Campaign) => {
+    setNewCampaign({
+      nome: campaign.nome,
+      assunto: campaign.assunto,
+      preheader: campaign.preheader || '',
+      conteudoHtml: campaign.conteudoHtml,
+      textoSimples: campaign.textoSimples || '',
+      bannerImg: campaign.bannerImg || '',
+      botaoTexto: campaign.botaoTexto || '',
+      botaoLink: campaign.botaoLink || '',
+      tipoEnvio: campaign.status === 'agendada' ? 'agendado' : 'imediato',
+      dataAgendada: campaign.dataAgendada || ''
+    });
+    setEditingId(campaign.id);
+    setIsCreating(true);
+    // Scroll para o topo para ver o formulário
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const startCampaign = async (campaign: Campaign) => {
@@ -385,7 +411,7 @@ ${campaignId ? `<img src="${systemUrl}/api/track?type=open&campaignId=${campaign
       {isCreating && (
         <div className="card" style={{ marginBottom: '2.5rem', border: '2px solid var(--primary)' }}>
           <header style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.25rem' }}>Nova Campanha Profissional</h3>
+            <h3 style={{ fontSize: '1.25rem' }}>{editingId ? 'Editar Campanha' : 'Nova Campanha Profissional'}</h3>
             <div className="btn-group" style={{ display: 'flex', background: 'var(--accent)', padding: '4px', borderRadius: '8px' }}>
                <button 
                  className={`btn ${viewMode === 'normal' ? 'btn-primary' : ''}`} 
@@ -571,8 +597,8 @@ ${campaignId ? `<img src="${systemUrl}/api/track?type=open&campaignId=${campaign
             </div>
 
             <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
-              <button className="btn btn-primary" onClick={handleCreate} style={{ padding: '0 2rem' }}>Salvar Campanha</button>
-              <button className="btn btn-outline" onClick={() => setIsCreating(false)}>Cancelar</button>
+              <button className="btn btn-primary" onClick={handleCreate} style={{ padding: '0 2rem' }}>{editingId ? 'Salvar Alterações' : 'Salvar Campanha'}</button>
+              <button className="btn btn-outline" onClick={() => { setIsCreating(false); setEditingId(null); setNewCampaign({ nome: '', assunto: '', preheader: '', conteudoHtml: '', textoSimples: '', bannerImg: '', botaoTexto: '', botaoLink: '', tipoEnvio: 'imediato', dataAgendada: '' }); }}>Cancelar</button>
             </div>
           </div>
         </div>
@@ -590,6 +616,15 @@ ${campaignId ? `<img src="${systemUrl}/api/track?type=open&campaignId=${campaign
                 <p style={{ fontSize: '0.875rem', opacity: 0.6 }}>Assunto: {campaign.assunto}</p>
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                <button 
+                  className="btn btn-outline" 
+                  style={{ width: '38px', height: '38px', padding: 0 }}
+                  title="Editar Campanha"
+                  onClick={() => handleEdit(campaign)}
+                  disabled={campaign.status !== 'rascunho' && campaign.status !== 'agendada'}
+                >
+                  <Edit2 size={18} />
+                </button>
                 <button 
                   className="btn btn-outline" 
                   style={{ width: '38px', height: '38px', padding: 0 }}

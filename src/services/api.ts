@@ -84,13 +84,14 @@ export const api = {
   },
   
   saveLead: async (lead: Lead) => {
+    const sanitizedLead = JSON.parse(JSON.stringify(lead));
     const leadRef = doc(db, COLLECTIONS.LEADS, lead.id);
     const snap = await getDoc(leadRef);
     
     if (snap.exists()) {
-      await updateDoc(leadRef, { ...lead });
+      await updateDoc(leadRef, sanitizedLead);
     } else {
-      await setDoc(leadRef, lead);
+      await setDoc(leadRef, sanitizedLead);
     }
     
     // Disparar evento para o sistema saber que há um novo lead (apenas localmente)
@@ -116,13 +117,15 @@ export const api = {
   },
 
   saveCampaign: async (campaign: Campaign) => {
+    // Sanitizar objeto para remover valores 'undefined' que o Firestore não suporta
+    const sanitizedCampaign = JSON.parse(JSON.stringify(campaign));
     const campaignRef = doc(db, COLLECTIONS.CAMPAIGNS, campaign.id);
     const snap = await getDoc(campaignRef);
     
     if (snap.exists()) {
-      await updateDoc(campaignRef, { ...campaign });
+      await updateDoc(campaignRef, sanitizedCampaign);
     } else {
-      await setDoc(campaignRef, campaign);
+      await setDoc(campaignRef, sanitizedCampaign);
     }
     return campaign;
   },
@@ -183,7 +186,8 @@ export const api = {
   },
 
   saveLandingPage: async (page: LandingPageInstance) => {
-    await setDoc(doc(db, COLLECTIONS.LANDING_PAGES, page.id), page);
+    const sanitizedPage = JSON.parse(JSON.stringify(page));
+    await setDoc(doc(db, COLLECTIONS.LANDING_PAGES, page.id), sanitizedPage);
     return page;
   },
 
