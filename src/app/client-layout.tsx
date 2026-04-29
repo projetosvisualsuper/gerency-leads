@@ -21,8 +21,10 @@ import {
   Layout as LayoutIcon,
   MessageCircle,
   Smartphone,
-  LogIn
+  LogIn,
+  ShieldCheck
 } from 'lucide-react';
+import { UserProfile } from '@/types/crm';
 
 export default function ClientLayout({
   children,
@@ -42,12 +44,31 @@ export default function ClientLayout({
     '/captura-editor', 
     '/configuracoes',
     '/whatsapp',
-    '/bio'
+    '/bio',
+    '/usuarios'
   ];
 
   // Se a rota NÃO estiver na lista acima, consideramos que é uma Página de Captura pública
   const isCapturePage = !adminRoutes.includes(pathname);
   const [notification, setNotification] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const profile = await api.getUserProfile(user.uid);
+        setUserProfile(profile);
+        if (!profile || profile.status !== 'approved') {
+          if (!isCapturePage) router.push('/login');
+        }
+      } else {
+        if (!isCapturePage) router.push('/login');
+      }
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, [pathname, isCapturePage]);
 
   useEffect(() => {
     const handleNewLead = async (e: any) => {
@@ -100,6 +121,14 @@ export default function ClientLayout({
     );
   }
 
+  if (loading) {
+    return (
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+        <div style={{ width: '40px', height: '40px', border: '3px solid var(--accent)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+      </div>
+    );
+  }
+
   return (
     <div className="app-container">
         <aside className="sidebar">
@@ -144,6 +173,12 @@ export default function ClientLayout({
               <SettingsIcon size={20} />
               <span className="nav-text">Configurações</span>
             </Link>
+            {userProfile?.role === 'admin' && (
+              <Link href="/usuarios" className={`nav-link ${pathname === '/usuarios' ? 'active' : ''}`}>
+                <ShieldCheck size={20} />
+                <span className="nav-text">Usuários</span>
+              </Link>
+            )}
           </nav>
 
           <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>

@@ -24,7 +24,8 @@ const COLLECTIONS = {
   QUEUE: 'queue',
   SETTINGS: 'settings',
   LANDING_PAGES: 'landing_pages',
-  BIO_LINKS: 'bio_links'
+  BIO_LINKS: 'bio_links',
+  USERS: 'users'
 };
 
 const initialSettings: Settings = {
@@ -326,6 +327,41 @@ export const api = {
     await updateDoc(bioRef, {
       visualizacoes: increment(1)
     });
+  },
+
+  // --- USER MANAGEMENT ---
+  getUserProfile: async (uid: string): Promise<UserProfile | null> => {
+    const userRef = doc(db, COLLECTIONS.USERS, uid);
+    const snap = await getDoc(userRef);
+    if (snap.exists()) {
+      return snap.data() as UserProfile;
+    }
+    return null;
+  },
+
+  createUserProfile: async (profile: UserProfile) => {
+    // Se for o primeiro usuário do sistema, aprova automaticamente como admin
+    const q = query(collection(db, COLLECTIONS.USERS), firestoreLimit(1));
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      profile.status = 'approved';
+      profile.role = 'admin';
+    }
+    
+    const sanitized = JSON.parse(JSON.stringify(profile));
+    await setDoc(doc(db, COLLECTIONS.USERS, profile.uid), sanitized);
+    return profile;
+  },
+
+  updateUserProfile: async (uid: string, data: Partial<UserProfile>) => {
+    const userRef = doc(db, COLLECTIONS.USERS, uid);
+    await updateDoc(userRef, data);
+  },
+
+  getAllUserProfiles: async (): Promise<UserProfile[]> => {
+    const q = query(collection(db, COLLECTIONS.USERS), orderBy('dataSolicitacao', 'desc'));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => doc.data() as UserProfile);
   },
 
   incrementBioClick: async (id: string) => {

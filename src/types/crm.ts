@@ -192,3 +192,17 @@ export interface BioLink {
   cliquesTotais: number;
   visualizacoes?: number; // Contador de visualizações do perfil
 }
+
+// --- USUÁRIOS E PERMISSÕES ---
+export type UserStatus = 'pending' | 'approved' | 'rejected';
+export type UserRole = 'admin' | 'editor';
+
+export interface UserProfile {
+  uid: string;
+  email: string;
+  name?: string;
+  status: UserStatus;
+  role: UserRole;
+  dataSolicitacao: string;
+  dataAprovacao?: string;
+}

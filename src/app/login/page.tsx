@@ -9,8 +9,11 @@ import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  signOut
 } from 'firebase/auth';
+import { api } from '@/services/api';
+import { UserProfile } from '@/types/crm';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,12 +23,40 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    name: ''
   });
+  const [isPending, setIsPending] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) router.push('/');
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const profile = await api.getUserProfile(user.uid);
+        if (profile) {
+          if (profile.status === 'approved') {
+            router.push('/');
+          } else if (profile.status === 'pending') {
+            setIsPending(true);
+            setError('Seu acesso está pendente de aprovação pelo administrador.');
+          } else {
+            setError('Seu acesso foi recusado. Entre em contato com o suporte.');
+            await signOut(auth);
+          }
+        } else {
+          // Se o usuário logou (ex: via Google) mas não tem perfil, cria um pendente
+          const newProfile: UserProfile = {
+            uid: user.uid,
+            email: user.email || '',
+            name: user.displayName || '',
+            status: 'pending',
+            role: 'editor',
+            dataSolicitacao: new Date().toISOString()
+          };
+          await api.createUserProfile(newProfile);
+          setIsPending(true);
+          setError('Solicitação de acesso enviada! Aguarde a aprovação do administrador.');
+        }
+      }
     });
     return () => unsubscribe();
   }, [router]);
@@ -52,11 +83,36 @@ export default function LoginPage() {
     
     try {
       if (isRegister) {
-        await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        const newProfile: UserProfile = {
+          uid: userCredential.user.uid,
+          email: formData.email,
+          name: formData.name,
+          status: 'pending',
+          role: 'editor',
+          dataSolicitacao: new Date().toISOString()
+        };
+        await api.createUserProfile(newProfile);
+        setIsPending(true);
+        setError('Solicitação de acesso enviada com sucesso! Aguarde a aprovação.');
       } else {
-        await signInWithEmailAndPassword(auth, formData.email, formData.password);
+        const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+        const profile = await api.getUserProfile(userCredential.user.uid);
+        
+        if (!profile || profile.status !== 'approved') {
+          if (profile?.status === 'rejected') {
+            setError('Seu acesso foi recusado pelo administrador.');
+          } else {
+            setIsPending(true);
+            setError('Seu acesso ainda não foi aprovado pelo administrador.');
+          }
+          await signOut(auth);
+          setIsLoading(false);
+          return;
+        }
+        
+        router.push('/');
       }
-      router.push('/');
     } catch (err: any) {
       console.error(err);
       if (err.code === 'auth/user-not-found') setError('Usuário não encontrado.');
@@ -124,6 +180,36 @@ export default function LoginPage() {
 
         {/* FORM SECTION */}
         <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1.25rem' }}>
+          {isRegister && (
+            <div style={{ textAlign: 'left' }}>
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.6)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Nome Completo
+              </label>
+              <div style={{ position: 'relative' }}>
+                <ShieldCheck size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255, 255, 255, 0.3)' }} />
+                <input 
+                  type="text" 
+                  required
+                  placeholder="Seu Nome"
+                  style={{ 
+                    width: '100%', 
+                    height: '52px', 
+                    background: 'rgba(255, 255, 255, 0.05)', 
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    padding: '0 1rem 0 3rem',
+                    color: 'white',
+                    fontSize: '1rem',
+                    outline: 'none',
+                    transition: 'all 0.2s'
+                  }}
+                  className="login-input"
+                  value={formData.name}
+                  onChange={e => setFormData({...formData, name: e.target.value})}
+                />
+              </div>
+            </div>
+          )}
           <div style={{ textAlign: 'left' }}>
             <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.6)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               E-mail Profissional
