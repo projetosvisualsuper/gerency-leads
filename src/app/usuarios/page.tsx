@@ -10,16 +10,19 @@ import {
   Clock, 
   Shield, 
   Search,
-  MoreVertical,
-  Mail,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Edit2,
+  Save,
+  X
 } from 'lucide-react';
 
 export default function UsuariosPage() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', role: 'editor' as any });
 
   useEffect(() => {
     loadUsers();
@@ -40,6 +43,21 @@ export default function UsuariosPage() {
       });
       loadUsers();
     }
+  };
+
+  const handleEditUser = (user: UserProfile) => {
+    setEditingUser(user);
+    setEditForm({ name: user.name || '', role: user.role });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingUser) return;
+    await api.updateUserProfile(editingUser.uid, {
+      name: editForm.name,
+      role: editForm.role
+    });
+    setEditingUser(null);
+    loadUsers();
   };
 
   const filteredUsers = users.filter(user => 
@@ -131,44 +149,55 @@ export default function UsuariosPage() {
                     </span>
                   </td>
                   <td style={{ padding: '1.25rem', textAlign: 'right' }}>
-                    {user.status === 'pending' ? (
-                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                        <button 
-                          className="btn btn-primary" 
-                          style={{ height: '32px', padding: '0 0.75rem', fontSize: '0.75rem', background: 'var(--success)' }}
-                          onClick={() => handleUpdateStatus(user.uid, 'approved')}
-                        >
-                          <CheckCircle2 size={14} /> Aprovar
-                        </button>
-                        <button 
-                          className="btn" 
-                          style={{ height: '32px', padding: '0 0.75rem', fontSize: '0.75rem', background: 'var(--danger)', color: 'white' }}
-                          onClick={() => handleUpdateStatus(user.uid, 'rejected')}
-                        >
-                          <XCircle size={14} /> Recusar
-                        </button>
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                        {user.status === 'approved' ? (
-                           <button 
-                           className="btn btn-outline" 
-                           style={{ height: '32px', padding: '0 0.75rem', fontSize: '0.75rem', color: 'var(--danger)', borderColor: 'var(--danger)' }}
-                           onClick={() => handleUpdateStatus(user.uid, 'rejected')}
-                         >
-                           Desativar
-                         </button>
-                        ) : (
+                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                      <button 
+                        className="btn btn-outline" 
+                        style={{ width: '32px', height: '32px', padding: 0 }}
+                        title="Editar Usuário"
+                        onClick={() => handleEditUser(user)}
+                      >
+                        <Edit2 size={14} />
+                      </button>
+
+                      {user.status === 'pending' ? (
+                        <>
                           <button 
-                          className="btn btn-outline" 
-                          style={{ height: '32px', padding: '0 0.75rem', fontSize: '0.75rem', color: 'var(--success)', borderColor: 'var(--success)' }}
-                          onClick={() => handleUpdateStatus(user.uid, 'approved')}
-                        >
-                          Ativar
-                        </button>
-                        )}
-                      </div>
-                    )}
+                            className="btn btn-primary" 
+                            style={{ height: '32px', padding: '0 0.75rem', fontSize: '0.75rem', background: 'var(--success)' }}
+                            onClick={() => handleUpdateStatus(user.uid, 'approved')}
+                          >
+                            <CheckCircle2 size={14} /> Aprovar
+                          </button>
+                          <button 
+                            className="btn" 
+                            style={{ height: '32px', padding: '0 0.75rem', fontSize: '0.75rem', background: 'var(--danger)', color: 'white' }}
+                            onClick={() => handleUpdateStatus(user.uid, 'rejected')}
+                          >
+                            <XCircle size={14} /> Recusar
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          {user.status === 'approved' ? (
+                             <button 
+                             className="btn btn-outline" 
+                             style={{ height: '32px', padding: '0 0.75rem', fontSize: '0.75rem', color: 'var(--danger)', borderColor: 'var(--danger)' }}
+                             onClick={() => handleUpdateStatus(user.uid, 'rejected')}
+                           >
+                             Desativar
+                           </button>
+                          ) : (
+                            <button 
+                            className="btn btn-outline" 
+                            style={{ height: '32px', padding: '0 0.75rem', fontSize: '0.75rem', color: 'var(--success)', borderColor: 'var(--success)' }}
+                            onClick={() => handleUpdateStatus(user.uid, 'approved')}
+                          >
+                            Ativar
+                          </button>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))
@@ -176,6 +205,54 @@ export default function UsuariosPage() {
           </tbody>
         </table>
       </div>
+
+      </div>
+
+      {editingUser && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+          <div className="card" style={{ maxWidth: '450px', width: '100%', padding: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontWeight: 700, fontSize: '1.25rem' }}>Editar Usuário</h3>
+              <button onClick={() => setEditingUser(null)} style={{ opacity: 0.5 }}><X size={20} /></button>
+            </div>
+
+            <div style={{ display: 'grid', gap: '1.25rem' }}>
+              <div style={{ display: 'grid', gap: '0.5rem' }}>
+                <label style={{ fontSize: '0.875rem', fontWeight: 600 }}>Nome Completo</label>
+                <input 
+                  className="btn-outline"
+                  style={{ width: '100%' }}
+                  value={editForm.name}
+                  onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                  placeholder="Ex: João Silva"
+                />
+              </div>
+
+              <div style={{ display: 'grid', gap: '0.5rem' }}>
+                <label style={{ fontSize: '0.875rem', fontWeight: 600 }}>Nível de Acesso</label>
+                <select 
+                  className="btn-outline"
+                  style={{ width: '100%', height: '42px' }}
+                  value={editForm.role}
+                  onChange={e => setEditForm({ ...editForm, role: e.target.value as any })}
+                >
+                  <option value="editor">Editor (Acesso padrão)</option>
+                  <option value="admin">Administrador (Pode gerenciar usuários)</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSaveEdit}>
+                  <Save size={18} /> Salvar Alterações
+                </button>
+                <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setEditingUser(null)}>
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         .table-row:hover {
